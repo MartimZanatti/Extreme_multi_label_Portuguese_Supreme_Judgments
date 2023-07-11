@@ -191,48 +191,6 @@ def create_panda_all_labels():
         pickle.dump(df, f)
 
 
-
-def get_information():
-    file = open("data/1_seccao/dataframe_1_seccao_all_labels.pkl", "rb")
-    df = pickle.load(file)
-
-    aux_df = df.iloc[:, 2:].copy()
-
-    sum_panda = aux_df.astype(bool).sum(axis=1)
-    print(sum_panda)
-    print("max", sum_panda.max())
-    print("min", sum_panda.min())
-    print("mean", sum_panda.mean())
-    print("mode", sum_panda.mode())
-    print("descrition", sum_panda.describe())
-
-
-def get_quantidade_by_range():
-    f_q = 0
-    s_q = 0
-    t_q = 0
-
-    file = "data/2_seccao/zones_stats_few_2_seccao.xlsx"
-    df = pd.read_excel(file)
-
-    print(df)
-
-
-    for i, row in enumerate(df.iloc):
-        q = row["Quantidade"]
-        if 14 <= q <= 266:
-            f_q += 1
-        elif 9 <= q <= 13:
-            s_q += 1
-        elif 1 <= q <= 8:
-            t_q += 1
-
-    print("f_q",f_q)
-    print("s_q", s_q)
-    print("t_q", t_q)
-
-
-
 def delete_acordaos_no_text():
     file = open("data/1_seccao/dataframe_1_seccao_all_labels.pkl", "rb")
     df = pickle.load(file)
@@ -442,38 +400,6 @@ def embedding_judgment(text, device):
     return X
 
 
-
-
-
-def delete_no_text(df, y):
-    zero_indxs = []
-
-    for i, row in enumerate(df.iloc):
-        text_list = row["text"]
-        if len(text_list) <= 0:
-            zero_indxs.append(i)
-
-    for id in zero_indxs:
-        df = df.drop(index=id)
-        print(len(y))
-        y = np.delete(y, id, axis=0)
-
-    return df, y
-
-
-def get_max_len_document(df):
-
-    doc_len = 0
-    file_name = ''
-    for i, row in enumerate(df.iloc):
-        text = row["text"]
-        if len(text) > doc_len:
-            doc_len = len(text)
-            file_name = row["file_name"]
-
-    return doc_len
-
-
 def project(V, x):
     """
     V: (embed dim, feature dim)
@@ -501,11 +427,6 @@ def precision_at_ks(true_Y, pred_Y, ks=[1, 2, 3, 4, 5, 10, 15]):
         result[k] = np.mean(precs)
     return result
 
-
-
-def print_hdf5_object(o):
-    for k in o:
-        print('{}: {}'.format(k, o[k].value))
 
 
 

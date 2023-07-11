@@ -37,9 +37,6 @@ def usage(doc_name, section, device="cpu"):
 
     y_ids = np.argsort(y)
 
-
-
-
     reverse_y_ids = np.flip(y_ids)
 
     labels_list = []
