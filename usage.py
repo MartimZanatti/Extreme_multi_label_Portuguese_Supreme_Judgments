@@ -35,6 +35,8 @@ def usage(doc_name, section, device="cpu"):
 
     y = ensemble.predict_one(emb_text_sparse)
 
+    #print(y)
+
     y_ids = np.argsort(y)
 
     reverse_y_ids = np.flip(y_ids)
@@ -42,7 +44,7 @@ def usage(doc_name, section, device="cpu"):
     labels_list = []
     for yy in reverse_y_ids:
         label = get_label_by_id(yy, section)
-        labels_list.append(label)
+        labels_list.append((label, y[yy]))
 
     print(labels_list)
 
