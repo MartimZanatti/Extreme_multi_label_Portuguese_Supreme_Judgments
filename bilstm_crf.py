@@ -179,7 +179,3 @@ class BiLSTMCRF(nn.Module):
         model.load_state_dict(params['state_dict'])
         model.to(device_to_load)
         return model
-
-
-
-
