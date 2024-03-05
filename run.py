@@ -2,8 +2,8 @@
 Usage:
     run.py embeddings-sem-seccao [ARGUMENTS ... ] [options]
     run.py embeddings-sem-seccao-test [ARGUMENTS ... ] [options]
-    run.py embeddings-contencioso [ARGUMENTS ... ] [options]
-    run.py embeddings-contencioso-test [ARGUMENTS ... ] [options]
+    run.py embeddings-contencioso-seccao [ARGUMENTS ... ] [options]
+    run.py embeddings-contencioso-seccao-test [ARGUMENTS ... ] [options]
     run.py embeddings-6-seccao [ARGUMENTS ... ] [options]
     run.py embeddings-6-seccao-test [ARGUMENTS ... ] [options]
     run.py embeddings-5-seccao [ARGUMENTS ... ] [options]
@@ -18,8 +18,8 @@ Usage:
     run.py embeddings-2-seccao-test [ARGUMENTS ... ] [options]
     run.py embeddings-1-seccao [ARGUMENTS ... ] [options]
     run.py embeddings-1-seccao-test [ARGUMENTS ... ] [options]
-    run.py train-contencioso [ARGUMENTS ... ] [options]
-    run.py test-contencioso [ARGUMENTS ... ] [options]
+    run.py train-contencioso-seccao [ARGUMENTS ... ] [options]
+    run.py test-contencioso-seccao [ARGUMENTS ... ] [options]
     run.py train-sem-seccao [ARGUMENTS ... ] [options]
     run.py test-sem-seccao [ARGUMENTS ... ] [options]
     run.py train-6-seccao [ARGUMENTS ... ] [options]
@@ -37,7 +37,7 @@ Usage:
     run.py train-1-seccao [ARGUMENTS ... ] [options]
     run.py test-1-seccao [ARGUMENTS ... ] [options]
     run.py transform-sem-seccao [ARGUMENTS ... ] [options]
-    run.py transform-contencioso [ARGUMENTS ... ] [options]
+    run.py transform-contencioso-seccao [ARGUMENTS ... ] [options]
     run.py transform-6-seccao [ARGUMENTS ... ] [options]
     run.py transform-5-seccao [ARGUMENTS ... ] [options]
     run.py transform-7-seccao [ARGUMENTS ... ] [options]
@@ -45,9 +45,25 @@ Usage:
     run.py transform-3-seccao [ARGUMENTS ... ] [options]
     run.py transform-2-seccao [ARGUMENTS ... ] [options]
     run.py transform-1-seccao [ARGUMENTS ... ] [options]
-
+    run.py sections-1-seccao [ARGUMENTS ... ] [options]
+    run.py sections-1-seccao-test [ARGUMENTS ... ] [options]
+    run.py sections-2-seccao [ARGUMENTS ... ] [options]
+    run.py sections-2-seccao-test [ARGUMENTS ... ] [options]
+    run.py sections-3-seccao [ARGUMENTS ... ] [options]
+    run.py sections-3-seccao-test [ARGUMENTS ... ] [options]
+    run.py sections-4-seccao [ARGUMENTS ... ] [options]
+    run.py sections-4-seccao-test [ARGUMENTS ... ] [options]
+    run.py sections-5-seccao [ARGUMENTS ... ] [options]
+    run.py sections-5-seccao-test [ARGUMENTS ... ] [options]
+    run.py sections-6-seccao [ARGUMENTS ... ] [options]
+    run.py sections-6-seccao-test [ARGUMENTS ... ] [options]
+    run.py sections-7-seccao [ARGUMENTS ... ] [options]
+    run.py sections-7-seccao-test [ARGUMENTS ... ] [options]
+    run.py sections-contencioso-seccao [ARGUMENTS ... ] [options]
+    run.py sections-contencioso-seccao-test [ARGUMENTS ... ] [options]
 
 Options:
+        --judgment-zone-model=<directory>   model of structuring zones [default: JudgmentModel/with_fundamentacao_separation/model.pth]
         --dropout-rate=<float>              dropout rate [default: 0.5]
         --d-max-pool=<list>                 d max pool [default: [125, 128, 128]]
         --filter-channels=<int>             filter channels [default: 128]
@@ -69,7 +85,7 @@ Options:
         --model-save-path=<file>            model save path [default: /home/ruimelo/martim/model/model.pth]
         --optimizer-save-path=<file>        optimizer save path [default: /home/ruimelo/martim/model/optimizer.pth]
         --cuda                              use GPU
-        --device-number=<int>               device number [default: 1]
+        --device-number=<int>               device number [default: 3]
 """
 
 from docopt import docopt
@@ -87,6 +103,9 @@ from scipy.sparse import vstack
 import numpy as np
 from tqdm import tqdm
 from ensemble import Model, Ensemble
+from Judgment import Judgment, get_paragraph_by_id, add_zones_to_paragraph_objects
+import bilstm_crf
+from bilstm_utils import id2word
 
 params = namedtuple('args', ['num_learner', 'num_clusters',
                              'num_threads', 'SVP_neigh', 'out_dim',
@@ -106,6 +125,9 @@ params.regressor_lambda2 = 1e-3
 def train(args, svp, out, nn):
     x_train_file = open(args["ARGUMENTS"][0], "rb")
     x_train = pickle.load(x_train_file)
+
+    print("input", args["ARGUMENTS"][0], args["ARGUMENTS"][1], args["ARGUMENTS"][2], args["ARGUMENTS"][3])
+    print("output", args["ARGUMENTS"][4])
 
 
     if np.isnan(x_train.data).any():
@@ -132,6 +154,9 @@ def train(args, svp, out, nn):
 
     learners = []
 
+    print(clusterings)
+
+
 
     for clus_model in tqdm(clusterings):
         models = []
@@ -149,6 +174,8 @@ def train(args, svp, out, nn):
                              include_self=True,
                              n_jobs=-1)
 
+
+
             graph.data = 1 - graph.data  # convert to similarity
 
 
@@ -160,11 +187,16 @@ def train(args, svp, out, nn):
             # shape: #instances x embedding dim
             Z = als_model.item_factors
 
+
+
+
+
             print('linear regressor training')
             # learn the linear regressor
             if True:
+                print('entrei')
                 # regressor = Ridge(fit_intercept=True, alpha=params.regressor_lambda2)
-                regressor = ElasticNet(alpha=0.1, l1_ratio=0.0001, max_iter=1000)
+                regressor = ElasticNet(alpha=0.1, l1_ratio=0.0001, max_iter=10)
                 regressor.fit(X, Z)
                 # shape: embedding dim x feature dim
                 V = regressor.coef_
@@ -200,6 +232,8 @@ def train(args, svp, out, nn):
 def transform_torch_numpy(args):
     x_train_file = open(args["ARGUMENTS"][0], "rb")
     x_train = pickle.load(x_train_file)
+    print("input", args["ARGUMENTS"][0], args["ARGUMENTS"][1], args["ARGUMENTS"][2], args["ARGUMENTS"][3])
+    print("output", args["ARGUMENTS"][4], args["ARGUMENTS"][5], args["ARGUMENTS"][6], args["ARGUMENTS"][7])
 
     print(x_train.size())
 
@@ -269,6 +303,7 @@ def test(args):
     x_test = pickle.load(x_test_file)
     x_test = csr_matrix(x_test)
 
+
     y_train_file = open(args["ARGUMENTS"][2], "rb")
     y_train = pickle.load(y_train_file)
 
@@ -291,6 +326,107 @@ def test(args):
 
 
 
+def append_section_elastic_search(args):
+    file = open(args["ARGUMENTS"][0], "rb")
+    df = pickle.load(file)  # train data as panda file
+
+    print(args["ARGUMENTS"][0])
+    print("input", args["ARGUMENTS"][0])
+    print(df)
+    print("output", args["ARGUMENTS"][1])
+
+    device = torch.device('cuda' if args['--cuda'] else 'cpu')
+    if args['--cuda']:
+        torch.cuda.set_device(int(args["--device-number"]))
+
+    sections_text = []
+    sections_name = []
+
+    for j,row in enumerate(df.iloc):
+        print("j", j)
+        text = row["text"]
+        doc = Judgment(text, "html", False)
+
+
+        model = bilstm_crf.BiLSTMCRF.load(args["--judgment-zone-model"], device)
+        model.eval()
+
+        all_text, ids, text_ids = doc.get_list_text()
+        output = {"wrapper": "plaintext", "text": text_ids, "denotations": []}
+
+        # secções pela ordem mais importante
+        sections_doc = {"fundamentação de direito": [], "fundamentação de facto": [], "relatório": [], "decisão": [],
+                        "delimitação": [], "colectivo": [], "declaração": [], "cabeçalho": [], "foot-note": [],
+                        "título": []}
+        sections = model.get_sections(all_text, device)
+
+        sections = sections[0][1:-1]
+        sections_names = []
+        for tag in sections:
+            sections_names.append(id2word(tag))
+
+        for i, section in enumerate(sections_names):
+            if section in ["B-cabeçalho", "I-cabeçalho"]:
+                sections_doc["cabeçalho"].append((section, ids[i]))
+            elif section in ["B-relatório", "I-relatório"]:
+                sections_doc["relatório"].append((section, ids[i]))
+            elif section in ["B-delimitação", "I-delimitação"]:
+                sections_doc["delimitação"].append((section, ids[i]))
+            elif section in ["B-fundamentação-facto", "I-fundamentação-facto"]:
+                sections_doc["fundamentação de facto"].append((section, ids[i]))
+            elif section in ["B-fundamentação-direito", "I-fundamentação-direito"]:
+                sections_doc["fundamentação de direito"].append((section, ids[i]))
+            elif section in ["B-decisão", "I-decisão"]:
+                sections_doc["decisão"].append((section, ids[i]))
+            elif section in ["B-colectivo", "I-colectivo"]:
+                sections_doc["colectivo"].append((section, ids[i]))
+            elif section in ["B-declaração", "I-declaração"]:
+                sections_doc["declaração"].append((section, ids[i]))
+            elif section in ["B-foot-note", "I-foot-note"]:
+                sections_doc["foot-note"].append((section, ids[i]))
+            elif section == "título":
+                sections_doc["título"].append((section, ids[i]))
+
+        keys = []
+        t_to_add = []
+
+        if len(sections_doc["relatório"]) != 0:
+            keys.append("relatório")
+            for p in sections_doc["relatório"]:
+                t = get_paragraph_by_id(p[1][0], doc)
+                t_to_add.append(t)
+
+        if len(sections_doc["fundamentação de facto"]) != 0:
+            keys.append("fundamentação de facto")
+            for p in sections_doc["fundamentação de facto"]:
+                t = get_paragraph_by_id(p[1][0], doc)
+                t_to_add.append(t)
+        if len(sections_doc["fundamentação de direito"]) != 0:
+            keys.append("fundamentação de direito")
+            for p in sections_doc["fundamentação de direito"]:
+                t = get_paragraph_by_id(p[1][0], doc)
+                t_to_add.append(t)
+        if t_to_add == []:
+            key, value = max(sections_doc.items(), key=lambda x: len(set(x[1])))
+            keys.append(key)
+            for p in value:
+                t = get_paragraph_by_id(p[1][0], doc)
+                t_to_add.append(t)
+
+
+        sections_text.append(t_to_add)
+        sections_name.append(keys)
+
+
+    df.insert(len(df.columns), "section text", sections_text)
+    df.insert(len(df.columns), "sections names", sections_name)
+
+    with open(args["ARGUMENTS"][1], 'wb') as f:
+        pickle.dump(df, f)
+
+
+
+
 
 def main():
     args = docopt(__doc__)
@@ -298,105 +434,35 @@ def main():
     torch.manual_seed(0)
     if args['--cuda']:
         torch.cuda.manual_seed(0)
-    if args["embeddings-sem-seccao"]:
-        create_embeddings(args)
-    elif args["embeddings-sem-seccao-test"]:
-        create_embeddings(args)
-    elif args["embeddings-contencioso"]:
-        create_embeddings(args)
-    elif args["embeddings-contencioso-test"]:
-        create_embeddings(args)
-    elif args["embeddings-6-seccao"]:
-        create_embeddings(args)
-    elif args["embeddings-6-seccao-test"]:
-        create_embeddings(args)
-    elif args["embeddings-5-seccao"]:
-        create_embeddings(args)
-    elif args["embeddings-5-seccao-test"]:
-        create_embeddings(args)
-    elif args["embeddings-7-seccao"]:
-        create_embeddings(args)
-    elif args["embeddings-7-seccao-test"]:
-        create_embeddings(args)
-    elif args["embeddings-4-seccao"]:
-        create_embeddings(args)
-    elif args["embeddings-4-seccao-test"]:
-        create_embeddings(args)
-    elif args["embeddings-3-seccao"]:
-        create_embeddings(args)
-    elif args["embeddings-3-seccao-test"]:
-        create_embeddings(args)
-    elif args["embeddings-2-seccao"]:
-        create_embeddings(args)
-    elif args["embeddings-2-seccao-test"]:
-        create_embeddings(args)
+    if args["sections-1-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-1-seccao-test"]:
+        append_section_elastic_search(args)
     elif args["embeddings-1-seccao"]:
         create_embeddings(args)
     elif args["embeddings-1-seccao-test"]:
         create_embeddings(args)
-    elif args["train-contencioso"]:
-        train(args, 20, 120, 15)
-        performance = test(args)
-        for k,s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-contencioso"]:
+    elif args["transform-1-seccao"]:
+        transform_torch_numpy(args)
+    elif args["train-1-seccao"]:
+        train(args, 30, 512, 15)
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
-    elif args["train-sem-seccao"]:
-        train(args, 30, 120, 15)
+    elif args["test-1-seccao"]:
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-sem-seccao"]:
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["train-6-seccao"]:
-        train(args, 20, 120, 15)
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-6-seccao"]:
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["train-5-seccao"]:
-        train(args, 20, 120, 15)
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-5-seccao"]:
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["train-7-seccao"]:
-        train(args, 35, 250, 20)
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-7-seccao"]:
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["train-4-seccao"]:
-        train(args, 35, 560, 20)
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-4-seccao"]:
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["train-3-seccao"]:
-        train(args, 35, 250, 20)
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-3-seccao"]:
-        performance = test(args)
-        for k, s in performance.items():
-            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["sections-2-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-2-seccao-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-2-seccao"]:
+        create_embeddings(args)
+    elif args["embeddings-2-seccao-test"]:
+        create_embeddings(args)
+    elif args["transform-2-seccao"]:
+        transform_torch_numpy(args)
     elif args["train-2-seccao"]:
         train(args, 30, 560, 15)
         performance = test(args)
@@ -406,33 +472,121 @@ def main():
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
-    elif args["train-1-seccao"]:
+    elif args["sections-3-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-3-seccao-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-3-seccao"]:
+        create_embeddings(args)
+    elif args["embeddings-3-seccao-test"]:
+        create_embeddings(args)
+    elif args["transform-3-seccao"]:
+        transform_torch_numpy(args)
+    elif args["train-3-seccao"]:
         train(args, 30, 560, 15)
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
-    elif args["test-1-seccao"]:
+    elif args["test-3-seccao"]:
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
-    elif args["transform-sem-seccao"]:
-        transform_torch_numpy(args)
-    elif args["transform-contencioso"]:
-        transform_torch_numpy(args)
-    elif args["transform-6-seccao"]:
-        transform_torch_numpy(args)
-    elif args["transform-5-seccao"]:
-        transform_torch_numpy(args)
-    elif args["transform-7-seccao"]:
-        transform_torch_numpy(args)
+    elif args["sections-4-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-4-seccao-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-4-seccao"]:
+        create_embeddings(args)
+    elif args["embeddings-4-seccao-test"]:
+        create_embeddings(args)
     elif args["transform-4-seccao"]:
         transform_torch_numpy(args)
-    elif args["transform-3-seccao"]:
+    elif args["train-4-seccao"]:
+        train(args, 30, 512, 15)
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-4-seccao"]:
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["sections-5-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-5-seccao-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-5-seccao"]:
+        create_embeddings(args)
+    elif args["embeddings-5-seccao-test"]:
+        create_embeddings(args)
+    elif args["transform-5-seccao"]:
         transform_torch_numpy(args)
-    elif args["transform-2-seccao"]:
+    elif args["train-5-seccao"]:
+        train(args, 30, 560, 15)
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-5-seccao"]:
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["sections-6-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-6-seccao-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-6-seccao"]:
+        create_embeddings(args)
+    elif args["embeddings-6-seccao-test"]:
+        create_embeddings(args)
+    elif args["transform-6-seccao"]:
         transform_torch_numpy(args)
-    elif args["transform-1-seccao"]:
+    elif args["train-6-seccao"]:
+        train(args, 30, 560, 15)
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-6-seccao"]:
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["sections-7-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-7-seccao-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-7-seccao"]:
+        create_embeddings(args)
+    elif args["embeddings-7-seccao-test"]:
+        create_embeddings(args)
+    elif args["transform-7-seccao"]:
         transform_torch_numpy(args)
+    elif args["train-7-seccao"]:
+        train(args, 30, 560, 15)
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-7-seccao"]:
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["sections-contencioso-seccao"]:
+        append_section_elastic_search(args)
+    elif args["sections-contencioso-seccao-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-contencioso-seccao"]:
+        create_embeddings(args)
+    elif args["embeddings-contencioso-seccao-test"]:
+        create_embeddings(args)
+    elif args["transform-contencioso-seccao"]:
+        transform_torch_numpy(args)
+    elif args["train-contencioso-seccao"]:
+        train(args, 30, 560, 15)
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-contencioso-seccao"]:
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+
 
 
 if __name__ == '__main__':

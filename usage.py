@@ -7,11 +7,14 @@ from ensemble import Ensemble, Model
 from scipy.sparse import coo_matrix, csr_matrix
 import numpy as np
 from labels import get_label_by_id
+import json
 
 def usage(doc_name, section, device="cpu"):
     output = get_sections(doc_name)
 
     final_text = get_judgment_nucleo_text(output)
+
+    labels_output = {"labels": [], "scores": []}
 
     emb_text = embedding_judgment(final_text, device)
 
@@ -35,8 +38,6 @@ def usage(doc_name, section, device="cpu"):
 
     y = ensemble.predict_one(emb_text_sparse)
 
-    #print(y)
-
     y_ids = np.argsort(y)
 
     reverse_y_ids = np.flip(y_ids)
@@ -44,23 +45,32 @@ def usage(doc_name, section, device="cpu"):
     labels_list = []
     for yy in reverse_y_ids:
         label = get_label_by_id(yy, section)
-        labels_list.append((label, y[yy]))
+        labels_list.append(label)
+        labels_output["labels"].append(label)
+        labels_output["scores"].append(y[yy])
 
-    print(labels_list)
+
+    out = json.dumps(labels_output)
+
+    return out
+
+
+
 
 
 
 def get_sections(doc_name, type="docx", device="cpu"):
-    doc = Judgment(doc_name, type)
+    doc = Judgment(doc_name, type, False)
 
-    model = bilstm_crf.BiLSTMCRF.load("../Judgmentzones/model/model.pth", device)
+    model = bilstm_crf.BiLSTMCRF.load("JudgmentModel/with_fundamentacao_separation/model.pth", device)
     model.eval()
     all_text, ids, text_ids = doc.get_list_text()
     output = {"wrapper": "plaintext", "text": text_ids, "denotations": []}
 
-    sections_doc = {"cabeçalho": [], "relatório": [], "delimitação": [], "fundamentação": [], "decisão": [],
-                    "colectivo": [], "declaração": [], "título": []}
+    #secções pela ordem mais importante
+    sections_doc = {"fundamentação de direito": [], "fundamentação de facto": [], "relatório": [], "decisão": [], "delimitação": [], "colectivo": [], "declaração": [], "cabeçalho": [], "foot-note": [], "título": []}
     sections = model.get_sections(all_text, device)
+    #print(sections)
     sections = sections[0][1:-1]
     sections_names = []
     for tag in sections:
@@ -73,21 +83,25 @@ def get_sections(doc_name, type="docx", device="cpu"):
             sections_doc["relatório"].append((section, ids[i]))
         elif section in ["B-delimitação", "I-delimitação"]:
             sections_doc["delimitação"].append((section, ids[i]))
-        elif section in ["B-fundamentação", "I-fundamentação"]:
-            sections_doc["fundamentação"].append((section, ids[i]))
+        elif section in ["B-fundamentação-facto", "I-fundamentação-facto"]:
+            sections_doc["fundamentação de facto"].append((section, ids[i]))
+        elif section in ["B-fundamentação-direito", "I-fundamentação-direito"]:
+            sections_doc["fundamentação de direito"].append((section, ids[i]))
         elif section in ["B-decisão", "I-decisão"]:
             sections_doc["decisão"].append((section, ids[i]))
         elif section in ["B-colectivo", "I-colectivo"]:
             sections_doc["colectivo"].append((section, ids[i]))
         elif section in ["B-declaração", "I-declaração"]:
             sections_doc["declaração"].append((section, ids[i]))
+        elif section in ["B-foot-note", "I-foot-note"]:
+            sections_doc["foot-note"].append((section, ids[i]))
         elif section == "título":
             sections_doc["título"].append((section, ids[i]))
 
     id = 0
     for key, value in sections_doc.items():
         if len(value) != 0:
-            if key in ["cabeçalho", "relatório", "delimitação", "fundamentação", "decisão"]:
+            if key in ["cabeçalho", "relatório", "delimitação", "fundamentação de facto", "fundamentação de direito", "decisão", "foot-note"]:
                 output["denotations"].append(
                     {"id": id, "start": value[0][1][0], "end": value[-1][1][0], "start_char": value[0][1][1],
                      "end_char": value[-1][1][2], "type": key})
@@ -99,7 +113,11 @@ def get_sections(doc_name, type="docx", device="cpu"):
                 output["denotations"].append({"id": id, "zones": zones, "type": key})
             id += 1
 
+
+
     return output
+
+
 
 
 
@@ -131,4 +149,4 @@ def get_judgment_nucleo_text(output):
     return text_list
 
 
-usage("../IrisDataset/test_examples/Ac. 1084.12.4TBPTL.G1.S1.docx", "7_seccao")
+usage("../IrisDataset/test_examples/Ac 1249-16.0JAPRT.P1.S1.docx", "5_seccao")

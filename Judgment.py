@@ -5,26 +5,40 @@ import re
 
 class Judgment:
 
-    def __init__(self, doc_name, type):
+    def __init__(self, doc_name, type, italic):
         if type == "docx":
             self.html = self.init_docx_format(doc_name)
+            self.paragraphs = []
+            self.add_paragraphs(italic)
         elif type == "html":
             self.html = doc_name
-        self.paragraphs = []
-        self.add_paragraphs()
-
+            self.paragraphs = []
+            self.add_paragraphs(italic)
+        elif type == "text":
+            paragraph_id = 1
+            self.paragraphs = []
+            # here doc_name is the text
+            for t in doc_name:
+                self.paragraphs.append(ParagraphText(text=t, id=paragraph_id))
+                paragraph_id += 1
 
     def init_docx_format(self, doc_name):
         html = pypandoc.convert_file(doc_name, "html", extra_args=["--wrap", "none"])
         return html
 
+    def add_paragraphs(self, italic):
 
-    def add_paragraphs(self):
-        paragraph_id = 1 # id do paragrafo
-        soup = BeautifulSoup(self.html, features="lxml")
-        paragraph_division = soup.find_all("p") #divide o doc html por paragrafos
+        paragraph_id = 1  # id do paragrafo
+        self.html = re.sub(r'<div>', '<p>', self.html)
+        self.html = re.sub(r'</div>', '</p>', self.html)
+        self.html = re.sub(r'<b>', '<p>', self.html)
+        self.html = re.sub(r'<br>', '</p><p>', self.html)
+        self.html = self.html + '</p>'
+        soup = BeautifulSoup(self.html, "html.parser")
+        paragraph_division = soup.find_all("p")  # divide o doc html por paragrafos
+        #print(paragraph_division)
         for paragraph in paragraph_division:
-            self.paragraphs.append(Paragraph(text=paragraph, id=paragraph_id))
+            self.paragraphs.append(Paragraph(text=paragraph, id=paragraph_id, italic=italic))
             paragraph_id += 1
 
     def get_list_text(self):
@@ -47,20 +61,46 @@ class Judgment:
 
 
 class Paragraph:
-    def __init__(self, text, id):
+    def __init__(self, text, id, italic):
         self.text = text
         self.id = id
+        self.italic = False
+        self.zone = "undefined"
         if is_only_symbols(text):
             self.symbols = True
         else:
             self.symbols = False
+        if italic:
+            if is_italic(text):
+                self.italic = True
 
     def __getattribute__(self, item):
         return super(Paragraph, self).__getattribute__(item)
-
 
 
 def is_only_symbols(text):
     paragraph_text = text.get_text()
     if re.match(r'^[^a-zA-Z0-9]+$', paragraph_text): # se um paragrafo so contiver simbolos
         return True
+
+
+def get_paragraph_by_id(id, doc):
+    for p in doc.paragraphs:
+        if p.id == id:
+            return p.text.get_text()
+
+
+def add_zones_to_paragraph_objects(output_zones, doc):
+        denotations = output_zones["denotations"]
+
+        for d in denotations:
+            if d["type"] in ["relatório", "delimitação", "fundamentação de facto", "fundamentação de direito", "decisão", "foot-note", "cabeçalho"]:
+                ids_section = list(range(d["start"], d["end"] + 1))
+                for id in ids_section:
+                    if doc.get_zone_by_paragraph_id(id) == "undefined":
+                        doc.change_paragraph_zone_by_id(id, d["type"])
+            else:
+                zones = d["zones"]
+                for z in zones:
+                    if doc.get_zone_by_paragraph_id(z[0]) == "undefined":
+                        doc.change_paragraph_zone_by_id(z[0], d["type"])
