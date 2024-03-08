@@ -1,0 +1,139 @@
+@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css');
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
+:root{
+    --primary-red: #BA1514;
+    --primary-gold: #C2A340;
+    --secondary-gold: #F4ECCE;
+}
+
+.fancy-font {
+    font-family: 'Cinzel', serif;
+    color: var(--primary-red);
+}
+
+.red-link{
+    color: var(--primary-red);
+}
+
+[role=button] {
+    cursor: pointer;
+}
+
+header{
+	background: var(--secondary-gold);
+}
+
+main{
+    display: grid;
+    grid-template:
+        "content extract" / 1fr 99fr;
+}
+
+par-row[data-par]::before{
+    content: attr(data-par);
+    padding: 0 0.4em 0 0;
+    font-size: 13px;
+}
+
+[slot=content] {
+    font-family: Times New Roman;
+    font-size: 14px;
+}
+
+par-row[data-visible="false"]{
+    display: none;
+}
+
+par-row[data-visible="true"]{
+    display: flex;
+    padding: 0 0.5em 0 0;
+}
+
+[slot=controls]{
+    color: var(--primary-gold);
+}
+
+[data-bin] .bi-reception-x:before{
+    font-size: 0.5rem;
+    white-space: break-spaces;
+    padding: 0 0.2rem;
+}
+
+[data-bin="0"] .bi-reception-x:before{
+    content: "\F584\A\F584\A\F584\A\F584";
+    opacity: 0.2;
+}
+[data-bin="1"] .bi-reception-x:before{
+    content: "\F584\A\F584\A\F584\A\F582";
+    opacity: 0.4;
+}
+[data-bin="2"] .bi-reception-x:before{
+    content: "\F584\A\F584\A\F582\A\F582";
+    opacity: 0.6;
+}
+[data-bin="3"] .bi-reception-x:before{
+    content: "\F584\A\F582\A\F582\A\F582";
+    opacity: 0.8;
+}
+[data-bin="4"] .bi-reception-x:before{
+    content: "\F582\A\F582\A\F582\A\F582";
+    opacity: 1;
+}
+
+par-row .clipboard-hover, par-row-extracted .clipboard-hover {
+    opacity: 0;
+    transition: 0.25s opacity, 1.25s color;
+}
+par-row:hover .clipboard-hover, par-row-extracted:hover .clipboard-hover {
+    opacity: 1;
+    transition: 0.75s opacity, 1.25s color;
+}
+
+[data-saved="false"] .bi-bookmark-toggle:before{
+    content: "\F1A2";
+}
+
+[data-saved="true"] .bi-bookmark-toggle:before{
+    content: "\F1A0";
+}
+
+[data-saved="true"] .bi-bookmark-toggle:hover:before, [data-saved="true"] .bi-bookmark-x-fill:hover:before{
+    color: var(--primary-red)
+}
+
+par-row-extracted[data-saved="false"]{
+    display: none;
+}
+
+par-row:target{
+    animation: highlight-target 2.5s linear;
+}
+
+@keyframes highlight-target {
+    from {background-color: initial;}
+    10% {background-color: var(--secondary-gold);}
+    to {background-color: initial;}
+  }
+
+  /* ===== Scrollbar CSS ===== */
+  /* Firefox */
+  * {
+    scrollbar-width: none;
+    scrollbar-color: var(--primary-gold) var(--secondary-gold);
+  }
+
+  /* Chrome, Edge, and Safari */
+  *::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--secondary-gold);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--primary-gold);
+    border-radius: 10px;
+  }
