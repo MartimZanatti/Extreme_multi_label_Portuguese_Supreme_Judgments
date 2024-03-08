@@ -1,14 +1,30 @@
 import click
 import json
 from usage import descriptors_assignment
+import sys
+from labels import get_label_by_id
 
 
 @click.command()
-@click.argument('filename', 'section', type=click.Path(exists=True))
-def black_box(filename, section):
+@click.argument('filename', type=click.Path(exists=True))
+@click.argument('section')
+def black_box(filename, section="1_seccao"):
 
-    descriptors_json = descriptors_assignment(filename, section)
-    print(descriptors_json)
+    labels_reversed, y = descriptors_assignment(filename, section)
+
+    json_descritores = []
+
+    for yy in labels_reversed:
+        label = get_label_by_id(yy, section)
+        if y[yy] != 0:
+            json_descritores.append({"text": label, "score": y[yy]})
+        else:
+            json_descritores.append({"text": label, "score": 0})
+
+
+
+
+    print(json.dumps(json_descritores))
 
 
 

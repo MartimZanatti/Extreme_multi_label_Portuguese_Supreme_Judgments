@@ -6,15 +6,16 @@ import pickle
 from ensemble import Ensemble, Model
 from scipy.sparse import coo_matrix, csr_matrix
 import numpy as np
-from labels import get_label_by_id
+
 import json
 
-def usage(doc_name, section, device="cpu"):
+def descriptors_assignment(doc_name, section, device="cpu"):
+
     output = get_sections(doc_name)
 
     final_text = get_judgment_nucleo_text(output)
 
-    labels_output = {"labels": [], "scores": []}
+
 
     emb_text = embedding_judgment(final_text, device)
 
@@ -42,17 +43,8 @@ def usage(doc_name, section, device="cpu"):
 
     reverse_y_ids = np.flip(y_ids)
 
-    labels_list = []
-    for yy in reverse_y_ids:
-        label = get_label_by_id(yy, section)
-        labels_list.append(label)
-        labels_output["labels"].append(label)
-        labels_output["scores"].append(y[yy])
 
-
-    out = json.dumps(labels_output)
-
-    return out
+    return reverse_y_ids, y
 
 
 
@@ -149,4 +141,5 @@ def get_judgment_nucleo_text(output):
     return text_list
 
 
-usage("../IrisDataset/test_examples/Ac 1249-16.0JAPRT.P1.S1.docx", "5_seccao")
+#descriptors_assignment("../IrisDataset/test_examples/Ac 1249-16.0JAPRT.P1.S1.docx", "5_seccao")
+
