@@ -1,5 +1,4 @@
 from flask import Flask, request, send_file, jsonify, send_from_directory
-from flask_cors import CORS
 import os
 import tempfile
 import subprocess
@@ -7,7 +6,6 @@ import subprocess
 #download_pandoc()
 
 app = Flask(__name__)
-CORS(app)
 app.config['JSON_AS_ASCII']=False
 
 @app.route('/', methods=["GET"])

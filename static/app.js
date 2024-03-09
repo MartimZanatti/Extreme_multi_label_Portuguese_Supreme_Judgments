@@ -1,35 +1,35 @@
-class ParRowExtracted extends HTMLElement{
-    constructor(){
+class ParRowExtracted extends HTMLElement {
+    constructor() {
         super();
         let template = document.getElementById("par-row-extracted-template").content.cloneNode(true);
-        let shadow = this.attachShadow({mode: 'closed'});
+        let shadow = this.attachShadow({ mode: 'closed' });
         shadow.appendChild(template);
     }
 }
 
-class ParRow extends HTMLElement{
-    constructor(){
+class ParRow extends HTMLElement {
+    constructor() {
         super();
         let template = document.getElementById("par-row-template").content.cloneNode(true);
-        let shadow = this.attachShadow({mode: 'closed'});
+        let shadow = this.attachShadow({ mode: 'closed' });
         shadow.appendChild(template);
     }
 
-    static get observedAttributes(){
+    static get observedAttributes() {
         return ['data-saved']
     }
 
-    attributeChangedCallback(attrName, lastVal, newVal){
-        if( lastVal === null) return; // just inserted
-        console.assert(attrName=='data-saved')
-        
-        if( newVal === 'true' ){
-            if( !this._parExtracted ){
+    attributeChangedCallback(attrName, lastVal, newVal) {
+        if (lastVal === null) return; // just inserted
+        console.assert(attrName == 'data-saved')
+
+        if (newVal === 'true') {
+            if (!this._parExtracted) {
                 this._parExtracted = createDocumentParagraphExtracted(this);
             }
             this._parExtracted.dataset.saved = true;
         }
-        else{
+        else {
             this._parExtracted.dataset.saved = false;
         }
     }
@@ -38,13 +38,13 @@ class ParRow extends HTMLElement{
 customElements.define('par-row-extracted', ParRowExtracted)
 customElements.define('par-row', ParRow);
 
-function showResponse(arrayOfParagraphs){
+function showResponse(arrayOfParagraphs) {
     let parent = document.getElementById("out");
     parent.innerHTML = "";
     let extractedParent = document.getElementById("sentences");
     extractedParent.innerHTML = "";
 
-    let sortedScores = arrayOfParagraphs.filter(o => o.score !== null).sort((a,b) => b.score - a.score);
+    let sortedScores = arrayOfParagraphs.filter(o => o.score !== null).sort((a, b) => b.score - a.score);
     let top5minScore = sortedScores.length >= 5 ? sortedScores[4].score : sortedScores.slice(-1)[0].score;
     let top7minScore = sortedScores.length >= 7 ? sortedScores[6].score : sortedScores.slice(-1)[0].score;
     let top10minScore = sortedScores.length >= 10 ? sortedScores[9].score : sortedScores.slice(-1)[0].score;
@@ -52,8 +52,8 @@ function showResponse(arrayOfParagraphs){
     let top20minScore = sortedScores.length >= 20 ? sortedScores[19].score : sortedScores.slice(-1)[0].score;
     let preSelectPars = [];
     arrayOfParagraphs.forEach((par, index) => {
-        let parRow = createDocumentParagraph(par.text, index+1, par.score >= top5minScore ? 4 : par.score >= top10minScore ? 3 : par.score >= top15minScore ? 2 : par.score >= par.score >= top20minScore ?  1 : 0)
-        if( par.score >= top7minScore ){
+        let parRow = createDocumentParagraph(par.text, index + 1, par.score >= top5minScore ? 4 : par.score >= top10minScore ? 3 : par.score >= top15minScore ? 2 : par.score >= par.score >= top20minScore ? 1 : 0)
+        if (par.score >= top7minScore) {
             parRow.dataset.saved = true;
         }
     });
@@ -62,8 +62,8 @@ function showResponse(arrayOfParagraphs){
 // Setup page events to handle a file.
 addEventListener("load", function () {
     document.getElementById("file").addEventListener("change", function (e) {
-         var seccao = document.getElementById("seccao").value;
-         postFile(e.target.files[0], seccao);
+        var seccao = document.getElementById("seccao").value;
+        postFile(e.target.files[0], seccao);
     });
     document.body.addEventListener("dragover", function (e) {
         e.preventDefault();
@@ -89,9 +89,9 @@ function postFile(file, seccao) {
         return;
     }
 
-    if( postFile.processingPost ) return; // prevent multiple submits
+    if (postFile.processingPost) return; // prevent multiple submits
     postFile.processingPost = true;
-    
+
     showProgress("0%");
     let title = document.getElementById("title");
     title.innerText = file.name;
@@ -124,21 +124,21 @@ function postFile(file, seccao) {
     });
 }
 
-function showProgress(percentString){
+function showProgress(percentString) {
     let progressParent = document.getElementById("progress-parent");
     let progressBar = document.getElementById("progress-bar");
     progressParent.removeAttribute("hidden");
     progressBar.style.width = percentString;
 }
 
-function hideProgress(){
+function hideProgress() {
     let progressParent = document.getElementById("progress-parent");
     let progressBar = document.getElementById("progress-bar");
     progressParent.setAttribute("hidden", "");
     progressBar.style.width = "0%";
 }
 
-function createDocumentParagraph(htmlContent,parNumber, bin){
+function createDocumentParagraph(htmlContent, parNumber, bin) {
     let parent = document.getElementById("out");
     let par = document.createElement("par-row");
     par.dataset.par = parNumber;
@@ -161,7 +161,7 @@ function createDocumentParagraph(htmlContent,parNumber, bin){
     return par;
 }
 
-function createDocumentParagraphExtracted(parRow){
+function createDocumentParagraphExtracted(parRow) {
     let parent = document.getElementById("sentences");
     let par = document.createElement("par-row-extracted");
     par.dataset.par = parRow.dataset.par;
@@ -182,13 +182,13 @@ function createDocumentParagraphExtracted(parRow){
     let controls = document.getElementById("extracted-controls-template").content.cloneNode(true);
     controls.slot = "controls";
     let link = controls.getElementById('link-par')
-    link.href=`#${parRow.id}`;
+    link.href = `#${parRow.id}`;
     link.id = "";
     par.appendChild(controls);
 
     let child = null;
-    for( let other of parent.querySelectorAll('par-row-extracted') ){
-        if( parseInt(other.dataset.par) > parseInt(par.dataset.par) ){
+    for (let other of parent.querySelectorAll('par-row-extracted')) {
+        if (parseInt(other.dataset.par) > parseInt(par.dataset.par)) {
             child = other;
             break;
         }
@@ -197,9 +197,9 @@ function createDocumentParagraphExtracted(parRow){
     return par;
 }
 
-function toggleParagraph(controlElem){
+function toggleParagraph(controlElem) {
     let parRow = controlElem.closest("par-row");
-    if(!parRow) return;
+    if (!parRow) return;
 
     /**
      * dataset vars are always string.
@@ -209,23 +209,23 @@ function toggleParagraph(controlElem){
     parRow.dataset.saved = parRow.dataset.saved === 'false';
 }
 
-function toggleExctractedParagraph(controlElem){
+function toggleExctractedParagraph(controlElem) {
     let parRowId = controlElem.closest("par-row-extracted").dataset.parId
     let parRow = document.getElementById(parRowId);
 
     parRow.dataset.saved = parRow.dataset.saved === 'false';
 }
 
-function showTop(bin){
+function showTop(bin) {
     let out = document.getElementById("out");
     let pars = out.getElementsByTagName("par-row");
 
-    for(let i = 0; i < pars.length; i++){
+    for (let i = 0; i < pars.length; i++) {
         let parRow = pars[i];
-        if( parseInt(parRow.dataset.bin) >= bin ){
+        if (parseInt(parRow.dataset.bin) >= bin) {
             parRow.dataset.visible = true;
         }
-        else{
+        else {
             parRow.dataset.visible = false;
         }
     }
@@ -233,7 +233,7 @@ function showTop(bin){
 
 function copyToClipboard(controlElem) {
     let parRow = controlElem.closest("par-row");
-    if( !parRow ){
+    if (!parRow) {
         let parRowId = controlElem.closest("par-row-extracted").dataset.parId
         parRow = document.getElementById(parRowId);
     }
@@ -244,10 +244,10 @@ function copyToClipboard(controlElem) {
     }, 1500);
 }
 
-function exportDocx(){
+function exportDocx() {
     let pars = [];
-    for( let par of document.querySelectorAll('par-row-extracted') ){
-        if( par.dataset.saved === 'true' ){
+    for (let par of document.querySelectorAll('par-row-extracted')) {
+        if (par.dataset.saved === 'true') {
             pars.push(new docx.Paragraph(par.querySelector("[slot=content]").textContent))
         }
     }
@@ -257,16 +257,16 @@ function exportDocx(){
         }]
     });
     docx.Packer.toBlob(doc).then((blob) => {
-        saveAs(blob, "sumario.docx")
+        saveAs(blob, "descritores.docx")
     })
 
 }
 let demo = [
-    {text:"<p>Esta aplicação permite ver e extraír os descritores pertinentes para um documento do supremo.</p>", score: null},
-    {text:"<p>Para começar a usar a aplicação escolha a secção do tribunal do documento e insira o mesmo para obter os descritores.</p>", score: null},
-    {text:"<p>O descritor irá dar uma pontuação aos descritores, e os cinco mais relevantes serão selecionados automáticamente.</p>", score: null},
-    {text:"<p>O utilizador poderá então controlar de forma total os descritores selecionados. Estes aparecem na area direita da aplicação.</p>", score: 1},
-    {text:"<p>No final os descritores selecionados podem ser extraídos para um documento DOCX.</p>", score: null},
+    { text: "<p>Esta aplicação permite ver e extraír os descritores pertinentes para um documento do supremo.</p>", score: null },
+    { text: "<p>Para começar a usar a aplicação escolha a secção do tribunal do documento e insira o mesmo para obter os descritores.</p>", score: null },
+    { text: "<p>O descritor irá dar uma pontuação aos descritores, e os cinco mais relevantes serão selecionados automáticamente.</p>", score: null },
+    { text: "<p>O utilizador poderá então controlar de forma total os descritores selecionados. Estes aparecem na area direita da aplicação.</p>", score: 1 },
+    { text: "<p>No final os descritores selecionados podem ser extraídos para um documento DOCX.</p>", score: null },
 
 
 ];
