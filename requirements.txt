@@ -15,3 +15,4 @@ sentence_transformers==2.5.1
 torch==2.2.1
 tqdm==4.66.2
 XlsxWriter==3.2.0
+Flask==2.3.2

@@ -54,7 +54,7 @@ def descriptors_assignment(doc_name, section, device="cpu"):
 def get_sections(doc_name, type="docx", device="cpu"):
     doc = Judgment(doc_name, type, False)
 
-    model = bilstm_crf.BiLSTMCRF.load("JudgmentModel/with_fundamentacao_separation/model.pth", device)
+    model = bilstm_crf.BiLSTMCRF.load("descritores.pth", device)
     model.eval()
     all_text, ids, text_ids = doc.get_list_text()
     output = {"wrapper": "plaintext", "text": text_ids, "denotations": []}
