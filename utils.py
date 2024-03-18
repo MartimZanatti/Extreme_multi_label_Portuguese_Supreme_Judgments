@@ -132,5 +132,11 @@ def precision_at_ks(true_Y, pred_Y, ks=[1, 2, 3, 4, 5, 10, 15, 20]):
     return result
 
 
+def transform_labels(pred_y, section):
+    d = {}
+    labels_section = return_labels(section)
+
+
+
 
 

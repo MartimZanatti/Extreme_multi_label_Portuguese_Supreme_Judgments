@@ -15,11 +15,14 @@ class Judgment:
             self.paragraphs = []
             self.add_paragraphs(italic)
         elif type == "text":
+            f = open(doc_name, "r", encoding="utf-8")
+            lines = f.read()
+            paragraphs_text = lines.split('\n')
             paragraph_id = 1
             self.paragraphs = []
             # here doc_name is the text
-            for t in doc_name:
-                self.paragraphs.append(ParagraphText(text=t, id=paragraph_id))
+            for p in paragraphs_text:
+                self.paragraphs.append(ParagraphText(text=p, id=paragraph_id))
                 paragraph_id += 1
 
     def init_docx_format(self, doc_name):
@@ -47,14 +50,22 @@ class Judgment:
         text_ids = []
         i_char = 0
         for p in self.paragraphs:
-            num_char = len(list(p.text.get_text()))
+            if type(p) is Paragraph:
+                num_char = len(list(p.text.get_text()))
+            else:
+                num_char = len(list(p.text))
             end_char = i_char + num_char
             if not p.symbols:
-                all_text.append(p.text.get_text())
+                if type(p) is Paragraph:
+                    all_text.append(p.text.get_text())
+                else:
+                    all_text.append(p.text)
                 ids.append((p.id, i_char + 1, end_char))
 
-
-            text_ids.append((p.text.get_text(), p.id, i_char + 1, end_char))
+            if type(p) is Paragraph:
+                text_ids.append((p.text.get_text(), p.id, i_char + 1, end_char))
+            else:
+                text_ids.append((p.text, p.id, i_char + 1, end_char))
             i_char = end_char
         return all_text, ids, text_ids
 
@@ -83,6 +94,10 @@ class ParagraphText:
         self.text = text
         self.id = id
         self.zone = "undefined"
+        self.symbols = False
+
+        if is_only_symbols_paragraph_text(text):
+            self.symbols = True
 
     def __getattribute__(self, item):
         return super(ParagraphText, self).__getattribute__(item)
@@ -93,6 +108,9 @@ def is_only_symbols(text):
     if re.match(r'^[^a-zA-Z0-9]+$', paragraph_text): # se um paragrafo so contiver simbolos
         return True
 
+def is_only_symbols_paragraph_text(text):
+    if re.match(r'^[^a-zA-Z0-9]+$', text): # se um paragrafo so contiver simbolos
+        return True
 
 def get_paragraph_by_id(id, doc):
     for p in doc.paragraphs:

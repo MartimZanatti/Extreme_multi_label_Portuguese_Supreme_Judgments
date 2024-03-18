@@ -367,6 +367,9 @@ def test_models_joint(args):
 
             print(pred_Y)
 
+
+            break
+
             performance = precision_at_ks(y_test, pred_Y)
 
             #performance = precision_at_ks(y_test, pred_Y)

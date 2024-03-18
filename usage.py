@@ -20,7 +20,10 @@ def descriptors_assignment(doc_name, section, file_extension, device="cpu"):
 
     output = get_sections(doc_name, type=type)
 
+
+
     final_text = get_judgment_nucleo_text(output)
+
 
 
     emb_text = embedding_judgment(final_text, device)
@@ -147,5 +150,5 @@ def get_judgment_nucleo_text(output):
     return text_list
 
 
-#descriptors_assignment("../IrisDataset/test_examples/Ac 1249-16.0JAPRT.P1.S1.docx", "5_seccao")
+#descriptors_assignment("../IrisDataset/test_examples/teste.txt", "6_seccao", ".txt")
 
