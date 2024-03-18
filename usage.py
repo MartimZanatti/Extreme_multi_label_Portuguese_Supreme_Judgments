@@ -9,12 +9,18 @@ import numpy as np
 
 import json
 
-def descriptors_assignment(doc_name, section, device="cpu"):
+def descriptors_assignment(doc_name, section, file_extension, device="cpu"):
 
-    output = get_sections(doc_name)
+    if file_extension == ".docx":
+        type = "docx"
+    elif file_extension == ".html":
+        type = "html"
+    elif file_extension == ".txt":
+        type = "text"
+
+    output = get_sections(doc_name, type=type)
 
     final_text = get_judgment_nucleo_text(output)
-
 
 
     emb_text = embedding_judgment(final_text, device)

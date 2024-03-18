@@ -7,10 +7,13 @@ from labels import get_label_by_id
 
 @click.command()
 @click.argument('filename', type=click.Path(exists=True))
+@click.argument('file_extension')
 @click.argument('section')
-def black_box(filename, section="1_seccao"):
+def black_box(filename, file_extension, section="1_seccao"):
 
-    labels_reversed, y = descriptors_assignment(filename, section)
+
+
+    labels_reversed, y = descriptors_assignment(filename, section, file_extension)
 
     json_descritores = []
 
