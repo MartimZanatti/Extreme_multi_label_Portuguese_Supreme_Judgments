@@ -11,7 +11,8 @@ class Judgment:
             self.paragraphs = []
             self.add_paragraphs(italic)
         elif type == "html":
-            self.html = doc_name
+            with open(doc_name, "r", encoding='utf-8') as f:
+                self.html = f.read()
             self.paragraphs = []
             self.add_paragraphs(italic)
         elif type == "text":

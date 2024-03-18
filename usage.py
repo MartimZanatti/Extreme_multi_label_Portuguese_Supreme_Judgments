@@ -21,8 +21,6 @@ def descriptors_assignment(doc_name, section, file_extension, device="cpu"):
 
     output = get_sections(doc_name, type=type)
 
-
-
     final_text = get_judgment_nucleo_text(output)
 
 
@@ -151,5 +149,5 @@ def get_judgment_nucleo_text(output):
     return text_list
 
 
-#descriptors_assignment("../IrisDataset/test_examples/teste.txt", "6_seccao", ".txt")
+#descriptors_assignment("../IrisDataset/test_examples/teste.html", "6_seccao", ".html")
 
