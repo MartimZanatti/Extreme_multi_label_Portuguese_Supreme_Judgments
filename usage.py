@@ -6,6 +6,7 @@ import pickle
 from ensemble import Ensemble, Model
 from scipy.sparse import coo_matrix, csr_matrix
 import numpy as np
+import sys
 
 import json
 
@@ -141,8 +142,8 @@ def get_judgment_nucleo_text(output):
                     ids_used.append(p[1])
 
     if text_list == []:
-        print("não encontrou nenhuma das seguintes seccões: relatório, fundamentação, decisão")
-        print("vamos retornar o texto todo")
+        sys.stderr.write("não encontrou nenhuma das seguintes seccões: relatório, fundamentação, decisão")
+        sys.stderr.write("vamos retornar o texto todo")
         for t in text:
             text_list.append(t[0])
 
