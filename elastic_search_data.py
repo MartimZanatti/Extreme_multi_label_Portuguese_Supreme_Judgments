@@ -183,8 +183,83 @@ def divide_elastic_data_in_sections():
 
 
 
+#so é preciso retreinar para as áreas (cível) - 1,2,6,7 secções e para a criminal 3,5 seccções
+def divide_elastic_data_in_areas():
+    file = open("data_area/elastic_data_descritores.pkl", 'rb')
+    df = pickle.load(file)
+
+    print(df)
+
+    official_descritores = get_official_descritores()
+
+    civel = {"id": [], "area": [], "descritores": [], "text": []}
+    criminal = {"id": [], "area": [], "descritores": [], "text": []}
+
+    for i, row in enumerate(df.iloc):
+        new_descritores = []
+        descritores = row["descritores"]
+        for d in descritores:
+            if d in official_descritores:
+                new_descritores.append(d)
+        if len(new_descritores) == 0:
+            continue
+
+        elif row["section"] == "1.ª Secção (Cível)":
+            civel["id"].append(row["id"])
+            civel["area"].append("cível")
+            civel["descritores"].append(new_descritores)
+            civel["text"].append(row["text"])
+
+        elif row["section"] == "2.ª Secção (Cível)":
+            civel["id"].append(row["id"])
+            civel["area"].append("cível")
+            civel["descritores"].append(new_descritores)
+            civel["text"].append(row["text"])
+
+        elif row["section"] == "3.ª Secção (Criminal)":
+            criminal["id"].append(row["id"])
+            criminal["area"].append("criminal")
+            criminal["descritores"].append(new_descritores)
+            criminal["text"].append(row["text"])
+
+        elif row["section"] == "5.ª Secção (Criminal)":
+            criminal["id"].append(row["id"])
+            criminal["area"].append("criminal")
+            criminal["descritores"].append(new_descritores)
+            criminal["text"].append(row["text"])
+
+        elif row["section"] == "6.ª Secção (Cível)":
+            civel["id"].append(row["id"])
+            civel["area"].append("cível")
+            civel["descritores"].append(new_descritores)
+            civel["text"].append(row["text"])
+
+        elif row["section"] == "7.ª Secção (Cível)":
+            civel["id"].append(row["id"])
+            civel["area"].append("cível")
+            civel["descritores"].append(new_descritores)
+            civel["text"].append(row["text"])
+
+
+    civel_1 = pd.DataFrame(civel)
+    print(civel_1)
+
+    with open("data_area/Civel/civel.pkl", 'wb') as f:
+        pickle.dump(civel_1, f)
+
+    criminal_2 = pd.DataFrame(criminal)
+    print(criminal_2)
+
+    with open("data_area/Criminal/criminal.pkl", 'wb') as f:
+        pickle.dump(criminal_2, f)
+
+
+
+
+
+
 def get_descritores_list():
-    file = open("data/Contencioso/contencioso_section.pkl", "rb")
+    file = open("data_area/Criminal/criminal.pkl", "rb")
     df = pickle.load(file)
     descritores = []
     official_descritores = get_official_descritores()
@@ -199,12 +274,13 @@ def get_descritores_list():
     print(sorted_list)
 
 
+
 def stat_descritores():
-    file = open("data/Contencioso/contencioso_section.pkl", "rb")
+    file = open("data_area/Criminal/criminal.pkl", "rb")
     df = pickle.load(file)
     stat_dic = {}
 
-    workbook = xlsxwriter.Workbook("data/Contencioso/descritores_contencioso.xlsx")
+    workbook = xlsxwriter.Workbook("data_area/Criminal/criminal_stats.xlsx")
     worksheet = workbook.add_worksheet()
     worksheet.write('A1', "Descritor")
     worksheet.write('B1', "Acordaos")
@@ -232,11 +308,12 @@ def stat_descritores():
     workbook.close()
 
 
+
 def delete_few_descritores():
-    file = open("data/Contencioso/contencioso_section.pkl", "rb")
+    file = open("data_area/Criminal/criminal.pkl", "rb")
     df = pickle.load(file)
     print(df)
-    dic = {"id": [], "section": [], "descritores": [], "text": []}
+    dic = {"id": [], "area": [], "descritores": [], "text": []}
     stat_dic = {}
     delete_descritores = []
 
@@ -258,28 +335,28 @@ def delete_few_descritores():
         new_descritores = []
         des = row["descritores"]
         text = row["text"]
-        section = row["section"]
+        section = row["area"]
         file_name = row["id"]
         for d in des:
             if d not in delete_descritores:
                 new_descritores.append(d)
         if len(new_descritores) != 0:
             dic["id"].append(file_name)
-            dic["section"].append(section)
+            dic["area"].append(section)
             dic["text"].append(text)
             dic["descritores"].append(new_descritores)
 
     df = pd.DataFrame(dic)
     print(df)
-    with open("data/Contencioso/contencioso_section_without_few_descritores.pkl", 'wb') as f:
+    with open("data_area/Criminal/criminal_without_few_descritores.pkl", 'wb') as f:
         pickle.dump(df, f)
 
 
 
 def create_panda_all_labels(section):
-    file = open("data/" + section + "/contencioso_section_without_few_descritores.pkl", "rb")
+    file = open("data_area/" + section + "/criminal_without_few_descritores.pkl", "rb")
     df = pickle.load(file)
-    dic = {"id": [], "section": [], "text": []}
+    dic = {"id": [], "area": [], "text": []}
 
     labels = return_labels(section)
 
@@ -290,7 +367,7 @@ def create_panda_all_labels(section):
     for i, row in enumerate(df.iloc):
         dic["id"].append(row["id"])
         dic["text"].append(row["text"])
-        dic["section"].append(row["section"])
+        dic["area"].append(row["area"])
 
         des = row["descritores"]
 
@@ -303,7 +380,7 @@ def create_panda_all_labels(section):
 
     df = pd.DataFrame(dic)
     print(df)
-    with open("data/" + section + "/contencioso_section_without_few_descritores_all_labels.pkl", 'wb') as f:
+    with open("data_area/" + section + "/criminal_without_few_descritores_all_labels.pkl", 'wb') as f:
         pickle.dump(df, f)
 
 
@@ -311,7 +388,7 @@ def create_panda_all_labels(section):
 
 
 def divide_data_statified(section):
-    file = open("data/" + section + "/first_section_without_few_descritores_all_labels.pkl", "rb")
+    file = open("data_area/" + section + "/criminal_without_few_descritores_all_labels.pkl", "rb")
     df = pickle.load(file)
 
     y = df[df.columns[3:]].values
@@ -331,42 +408,42 @@ def divide_data_statified(section):
     print("y_train", y_train.shape)
     print("y_test", y_test.shape)
 
-    with open("data/" + section + "/X_train.pkl", 'wb') as f:
+    with open("data_area/" + section + "/X_train.pkl", 'wb') as f:
         pickle.dump(x_train, f)
 
-    with open("data/" + section + "/X_test.pkl", 'wb') as f:
+    with open("data_area/" + section + "/X_test.pkl", 'wb') as f:
         pickle.dump(x_test, f)
 
-    with open("data/" + section + "/y_train.pkl", 'wb') as f:
+    with open("data_area/" + section + "/y_train.pkl", 'wb') as f:
         pickle.dump(y_train, f)
 
-    with open("data/" + section + "/y_test.pkl", 'wb') as f:
+    with open("data_area/" + section + "/y_test.pkl", 'wb') as f:
         pickle.dump(y_test, f)
 
 
 
 
 def create_pandas_stratified_divisions(section_dir):
-    file = open("data/" + section_dir + "/contencioso_section_without_few_descritores_all_labels.pkl", "rb")
+    file = open("data_area/" + section_dir + "/criminal_without_few_descritores_all_labels.pkl", "rb")
     df = pickle.load(file)
-    train = {"id": [], "section": [], "text": [], "descritores": []}
-    test = {"id": [], "section": [], "text": [], "descritores": []}
+    train = {"id": [], "area": [], "text": [], "descritores": []}
+    test = {"id": [], "area": [], "text": [], "descritores": []}
 
     print(df)
 
-    x_train_file = open("data/" + section_dir + "/X_train.pkl", "rb")
+    x_train_file = open("data_area/" + section_dir + "/X_train.pkl", "rb")
     x_train = pickle.load(x_train_file)
 
 
-    y_train_file = open("data/" + section_dir + "/y_train.pkl", "rb")
+    y_train_file = open("data_area/" + section_dir + "/y_train.pkl", "rb")
     y_train = pickle.load(y_train_file)
 
 
-    x_test_file = open("data/" + section_dir + "/X_test.pkl", "rb")
+    x_test_file = open("data_area/" + section_dir + "/X_test.pkl", "rb")
     x_test = pickle.load(x_test_file)
 
 
-    y_test_file = open("data/" + section_dir + "/y_test.pkl", "rb")
+    y_test_file = open("data_area/" + section_dir + "/y_test.pkl", "rb")
     y_test = pickle.load(y_test_file)
 
     print("x_train", x_train.shape)
@@ -379,7 +456,7 @@ def create_pandas_stratified_divisions(section_dir):
         found = False
         text = row["text"]
         file_name = row["id"]
-        section = row["section"]
+        section = row["area"]
         labels = row[3:].tolist()
 
 
@@ -388,7 +465,7 @@ def create_pandas_stratified_divisions(section_dir):
             if text == t[0] and labels == y_labels:
                 train["id"].append(file_name)
                 train["text"].append(text)
-                train["section"].append(section)
+                train["area"].append(section)
                 train["descritores"].append(y_train[j])
                 found = True
                 break
@@ -399,22 +476,22 @@ def create_pandas_stratified_divisions(section_dir):
                 if found == False:
                     test["id"].append(file_name)
                     test["text"].append(text)
-                    test["section"].append(section)
+                    test["area"].append(section)
                     test["descritores"].append(y_test[w])
                     break
                 else:
                     print(row["id"])
 
-        assert len(train["id"]) + len(test["id"]) - 1  == i
+        assert len(train["id"]) + len(test["id"]) - 1 == i
 
     train_df = pd.DataFrame(train)
     print(train_df)
-    with open("data/" + section_dir + "/data_train.pkl", 'wb') as f:
+    with open("data_area/" + section_dir + "/data_train.pkl", 'wb') as f:
         pickle.dump(train_df, f)
 
     test_df = pd.DataFrame(test)
     print(test_df)
-    with open("data/" + section_dir + "/data_test.pkl", 'wb') as f:
+    with open("data_area/" + section_dir + "/data_test.pkl", 'wb') as f:
         pickle.dump(test_df, f)
 
 

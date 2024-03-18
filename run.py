@@ -61,6 +61,21 @@ Usage:
     run.py sections-7-seccao-test [ARGUMENTS ... ] [options]
     run.py sections-contencioso-seccao [ARGUMENTS ... ] [options]
     run.py sections-contencioso-seccao-test [ARGUMENTS ... ] [options]
+    run.py embeddings-civel [ARGUMENTS ... ] [options]
+    run.py embeddings-civel-test [ARGUMENTS ... ] [options]
+    run.py train-civel [ARGUMENTS ... ] [options]
+    run.py embeddings-criminal [ARGUMENTS ... ] [options]
+    run.py embeddings-criminal-test [ARGUMENTS ... ] [options]
+    run.py train-criminal [ARGUMENTS ... ] [options]
+    run.py sections-civel [ARGUMENTS ... ] [options]
+    run.py sections-civel-test [ARGUMENTS ... ] [options]
+    run.py sections-criminal [ARGUMENTS ... ] [options]
+    run.py sections-criminal-test [ARGUMENTS ... ] [options]
+    run.py transform-civel [ARGUMENTS ... ] [options]
+    run.py transform-criminal [ARGUMENTS ... ] [options]
+    run.py test-civel [ARGUMENTS ... ] [options]
+    run.py test-criminal [ARGUMENTS ... ] [options]
+    run.py test-civel-all [ARGUMENTS ... ] [options]
 
 Options:
         --judgment-zone-model=<directory>   model of structuring zones [default: JudgmentModel/with_fundamentacao_separation/model.pth]
@@ -85,7 +100,7 @@ Options:
         --model-save-path=<file>            model save path [default: /home/ruimelo/martim/model/model.pth]
         --optimizer-save-path=<file>        optimizer save path [default: /home/ruimelo/martim/model/optimizer.pth]
         --cuda                              use GPU
-        --device-number=<int>               device number [default: 3]
+        --device-number=<int>               device number [default: 2]
 """
 
 from docopt import docopt
@@ -295,9 +310,8 @@ def transform_torch_numpy(args):
 
 
 def test(args):
-    x_train_file = open(args["ARGUMENTS"][0], "rb")
-    x_train = pickle.load(x_train_file)
-    x_train = csr_matrix(x_train)
+    print("input:", args["ARGUMENTS"][1], args["ARGUMENTS"][2], args["ARGUMENTS"][3], args["ARGUMENTS"][4])
+
 
     x_test_file = open(args["ARGUMENTS"][1], "rb")
     x_test = pickle.load(x_test_file)
@@ -324,6 +338,64 @@ def test(args):
 
     return performance
 
+#funcao que testa a area civel e a area criminal juntando os modelos das secoes e area respectivas
+def test_models_joint(args):
+    x_test_file = open(args["ARGUMENTS"][0], "rb")
+    x_test = pickle.load(x_test_file)
+    x_test = csr_matrix(x_test)
+
+    y_test_file = open(args["ARGUMENTS"][1], "rb")
+    y_test = pickle.load(y_test_file)
+
+
+    for a in range(2, len(args["ARGUMENTS"]), 2):
+
+        print(args["ARGUMENTS"][a])
+        print(args["ARGUMENTS"][a + 1])
+
+        y_train_file = open(args["ARGUMENTS"][a], "rb")
+
+        y_train = pickle.load(y_train_file)
+
+        with open(args["ARGUMENTS"][a + 1], 'rb') as f:
+            learners = pickle.load(f)
+            models = [Model(learner, y_train)
+                      for learner in learners]
+            ensemble = Ensemble(models)
+
+            pred_Y = ensemble.predict_many(x_test)
+
+            print(pred_Y)
+
+            performance = precision_at_ks(y_test, pred_Y)
+
+            #performance = precision_at_ks(y_test, pred_Y)
+            break
+
+
+
+
+    """
+    models = [Model(learner, y_train)
+              for learner in learners]
+
+
+    ensemblers = []
+
+    for m in models:
+        ensemble = Ensemble(m)
+        ensemblers.append(ensemble)
+
+
+    for e in ensemblers:
+        pred_Y = e.predict_many(x_test)
+        print(pred_Y)
+        break
+    """
+
+
+
+    return performance
 
 
 def append_section_elastic_search(args):
@@ -586,7 +658,48 @@ def main():
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
-
+    elif args["sections-civel"]:
+        append_section_elastic_search(args)
+    elif args["sections-civel-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-civel"]:
+        create_embeddings(args)
+    elif args["embeddings-civel-test"]:
+        create_embeddings(args)
+    elif args["transform-civel"]:
+        transform_torch_numpy(args)
+    elif args["train-civel"]:
+        train(args, 50, 1024, 10)
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-civel"]:
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["sections-criminal"]:
+        append_section_elastic_search(args)
+    elif args["sections-criminal-test"]:
+        append_section_elastic_search(args)
+    elif args["embeddings-criminal"]:
+        create_embeddings(args)
+    elif args["embeddings-criminal-test"]:
+        create_embeddings(args)
+    elif args["transform-criminal"]:
+        transform_torch_numpy(args)
+    elif args["train-criminal"]:
+        train(args, 30, 560, 15)
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-criminal"]:
+        performance = test(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-civel-all"]:
+        performance = test_models_joint(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
 
 
 if __name__ == '__main__':
