@@ -78,6 +78,16 @@ class Paragraph:
         return super(Paragraph, self).__getattribute__(item)
 
 
+class ParagraphText:
+    def __init__(self, text, id):
+        self.text = text
+        self.id = id
+        self.zone = "undefined"
+
+    def __getattribute__(self, item):
+        return super(ParagraphText, self).__getattribute__(item)
+
+
 def is_only_symbols(text):
     paragraph_text = text.get_text()
     if re.match(r'^[^a-zA-Z0-9]+$', paragraph_text): # se um paragrafo so contiver simbolos
