@@ -20,7 +20,7 @@ def handle_post():
     _, file_extension = os.path.splitext(request.files["file"].filename)
     uploaded_file = tempfile.NamedTemporaryFile(suffix=file_extension, delete=False)
     request.files["file"].save(uploaded_file)
-    area = request.form.get("area") or "civel"
+    area = request.form.get("area")
     uploaded_file.flush()
     uploaded_file.close()
 

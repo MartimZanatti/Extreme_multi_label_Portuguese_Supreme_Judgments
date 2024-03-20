@@ -82,10 +82,10 @@ addEventListener("load", function () {
 });
 
 // Submit file to server.
-function postFile(file, seccao) {
+function postFile(file, area) {
 
-    if (!seccao || seccao === "no_seccao") {
-        alert("Por favor, selecione uma seção antes de submeter o acórdão.");
+    if (!area || area === "no_area") {
+        alert("Por favor, selecione uma área antes de submeter o acórdão.");
         return;
     }
 
@@ -104,7 +104,7 @@ function postFile(file, seccao) {
     showProgress("10%")
     let formData = new FormData();
     formData.append("file", file);
-    formData.append("seccao", seccao)
+    formData.append("area", area)
 
     fetch("./", {
         method: "POST",

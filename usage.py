@@ -11,6 +11,9 @@ from labels import return_labels
 
 import json
 
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
 
     if file_extension == ".docx":
@@ -85,20 +88,66 @@ def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
 
         models.append(learners_7)
 
-        for i,model in enumerate(models):
-            print(model)
-            models = [Model(learner, ys[i])
-                      for learner in model]
-            ensemble = Ensemble(models)
+    elif area == "criminal": #se a area for civel, vamos buscar os modelos da 3,5 seccao
+        y_train_3_file = open("data/3_seccao/y_train_numpy.pkl", "rb")
+        y_train_3 = pickle.load(y_train_3_file)
+        ys.append(y_train_3)
+        section_labels.append(return_labels("3_seccao"))
 
-            pred_y = ensemble.predict_one(emb_text_sparse)
 
-            for j,y in enumerate(pred_y):
-                label = section_labels[i][j]
-                if label not in X_labels:
-                    X_labels[label] = y
-                else:
-                    X_labels[label] += y
+        with open("data/3_seccao/models.pkl", 'rb') as f:
+            learners_3 = pickle.load(f)
+
+        models.append(learners_3)
+
+        y_train_5_file = open("data/5_seccao/y_train_numpy.pkl", "rb")
+        y_train_5 = pickle.load(y_train_5_file)
+        ys.append(y_train_5)
+        section_labels.append(return_labels("5_seccao"))
+
+        with open("data/5_seccao/models.pkl", 'rb') as f:
+            learners_5 = pickle.load(f)
+
+        models.append(learners_5)
+
+    elif area == "social": #se a area for civel, vamos buscar os modelos da 4 seccao
+        y_train_4_file = open("data/4_seccao/y_train_numpy.pkl", "rb")
+        y_train_4 = pickle.load(y_train_4_file)
+        ys.append(y_train_4)
+        section_labels.append(return_labels("4_seccao"))
+
+
+        with open("data/4_seccao/models.pkl", 'rb') as f:
+            learners_4 = pickle.load(f)
+
+        models.append(learners_4)
+
+    elif area == "contencioso": #se a area for civel, vamos buscar os modelos da 3,5 seccao
+        y_train_cont_file = open("data/contencioso/y_train_numpy.pkl", "rb")
+        y_train_cont = pickle.load(y_train_cont_file)
+        ys.append(y_train_cont)
+        section_labels.append(return_labels("contencioso"))
+
+
+        with open("data/contencioso/models.pkl", 'rb') as f:
+            learners_cont = pickle.load(f)
+
+        models.append(learners_cont)
+
+
+    for i,model in enumerate(models):
+        models = [Model(learner, ys[i])
+                  for learner in model]
+        ensemble = Ensemble(models)
+
+        pred_y = ensemble.predict_one(emb_text_sparse)
+
+        for j,y in enumerate(pred_y):
+            label = section_labels[i][j]
+            if label not in X_labels:
+                X_labels[label] = y
+            else:
+                X_labels[label] += y
 
 
 

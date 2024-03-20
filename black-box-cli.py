@@ -9,7 +9,7 @@ from labels import get_label_by_id
 @click.argument('filename', type=click.Path(exists=True))
 @click.argument('file_extension')
 @click.argument('area')
-def black_box(filename, file_extension, area="civel"):
+def black_box(filename, file_extension, area):
 
 
 
