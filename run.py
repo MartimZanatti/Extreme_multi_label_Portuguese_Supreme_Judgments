@@ -76,6 +76,7 @@ Usage:
     run.py test-civel [ARGUMENTS ... ] [options]
     run.py test-criminal [ARGUMENTS ... ] [options]
     run.py test-civel-all [ARGUMENTS ... ] [options]
+    run.py test-criminal-all [ARGUMENTS ... ] [options]
 
 Options:
         --judgment-zone-model=<directory>   model of structuring zones [default: JudgmentModel/with_fundamentacao_separation/model.pth]
@@ -347,6 +348,8 @@ def test_models_joint(args):
     y_test_file = open(args["ARGUMENTS"][1], "rb")
     y_test = pickle.load(y_test_file)
 
+    x_objects = []
+
 
     for a in range(2, len(args["ARGUMENTS"]), 2):
 
@@ -365,36 +368,25 @@ def test_models_joint(args):
 
             pred_Y = ensemble.predict_many(x_test)
 
-            print(pred_Y)
+
+            if x_objects == []:
+                for i,y in enumerate(pred_Y):
+                    x_objects.append(X_test(i, {}))
 
 
-            break
+            sec = args["ARGUMENTS"][a + 1][5:13]
 
-            performance = precision_at_ks(y_test, pred_Y)
+
+
+            x_objects = transform_labels(pred_Y, sec, x_objects)
+
 
             #performance = precision_at_ks(y_test, pred_Y)
-            break
+
+            #performance = precision_at_ks(y_test, pred_Y)
 
 
-
-
-    """
-    models = [Model(learner, y_train)
-              for learner in learners]
-
-
-    ensemblers = []
-
-    for m in models:
-        ensemble = Ensemble(m)
-        ensemblers.append(ensemble)
-
-
-    for e in ensemblers:
-        pred_Y = e.predict_many(x_test)
-        print(pred_Y)
-        break
-    """
+    performance = precision_all_models(y_test, x_objects, "1_seccao")
 
 
 
@@ -700,6 +692,10 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["test-civel-all"]:
+        performance = test_models_joint(args)
+        for k, s in performance.items():
+            print('precision@{}: {:.4f}'.format(k, s))
+    elif args["test-criminal-all"]:
         performance = test_models_joint(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))

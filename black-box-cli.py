@@ -8,21 +8,23 @@ from labels import get_label_by_id
 @click.command()
 @click.argument('filename', type=click.Path(exists=True))
 @click.argument('file_extension')
-@click.argument('section')
-def black_box(filename, file_extension, section="1_seccao"):
+@click.argument('area')
+def black_box(filename, file_extension, area="civel"):
 
 
 
-    labels_reversed, y = descriptors_assignment(filename, section, file_extension)
+    labels = descriptors_assignment(filename, area, file_extension)
+
+    pred_labels = {k: v for k, v in sorted(labels.items(), key=lambda item: item[1], reverse=True)}
+
+
+
 
     json_descritores = []
 
-    for yy in labels_reversed:
-        label = get_label_by_id(yy, section)
-        if y[yy] != 0:
-            json_descritores.append({"text": label, "score": y[yy]})
-        else:
-            json_descritores.append({"text": label, "score": 0})
+    for key,value in pred_labels.items():
+        json_descritores.append({"text": key, "score": value})
+
 
 
 

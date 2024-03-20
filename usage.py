@@ -7,10 +7,11 @@ from ensemble import Ensemble, Model
 from scipy.sparse import coo_matrix, csr_matrix
 import numpy as np
 import sys
+from labels import return_labels
 
 import json
 
-def descriptors_assignment(doc_name, section, file_extension, device="cpu"):
+def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
 
     if file_extension == ".docx":
         type = "docx"
@@ -31,11 +32,94 @@ def descriptors_assignment(doc_name, section, file_extension, device="cpu"):
     emb_text = emb_text.numpy()
     emb_text_sparse = csr_matrix(emb_text)
 
+    models = []
+    ys = []
 
-    y_train_file = open("data/" + section + "/y_train_numpy.pkl", "rb")
-    y_train = pickle.load(y_train_file)
+    X_labels = {}
+
+    section_labels = []
 
 
+
+
+
+    if area == "civel": #se a area for civel, vamos buscar os modelos da 1,2,6,7 seccao
+        y_train_1_file = open("data/1_seccao/y_train_numpy.pkl", "rb")
+        y_train_1 = pickle.load(y_train_1_file)
+        ys.append(y_train_1)
+        section_labels.append(return_labels("1_seccao"))
+
+
+        with open("data/1_seccao/models.pkl", 'rb') as f:
+            learners_1 = pickle.load(f)
+
+        models.append(learners_1)
+
+        y_train_2_file = open("data/2_seccao/y_train_numpy.pkl", "rb")
+        y_train_2 = pickle.load(y_train_2_file)
+        ys.append(y_train_2)
+        section_labels.append(return_labels("2_seccao"))
+
+        with open("data/2_seccao/models.pkl", 'rb') as f:
+            learners_2 = pickle.load(f)
+
+        models.append(learners_2)
+
+        y_train_6_file = open("data/6_seccao/y_train_numpy.pkl", "rb")
+        y_train_6 = pickle.load(y_train_6_file)
+        ys.append(y_train_6)
+        section_labels.append(return_labels("6_seccao"))
+
+        with open("data/6_seccao/models.pkl", 'rb') as f:
+            learners_6 = pickle.load(f)
+
+        models.append(learners_6)
+
+        y_train_7_file = open("data/7_seccao/y_train_numpy.pkl", "rb")
+        y_train_7 = pickle.load(y_train_7_file)
+        ys.append(y_train_7)
+        section_labels.append(return_labels("7_seccao"))
+
+        with open("data/7_seccao/models.pkl", 'rb') as f:
+            learners_7 = pickle.load(f)
+
+        models.append(learners_7)
+
+        for i,model in enumerate(models):
+            print(model)
+            models = [Model(learner, ys[i])
+                      for learner in model]
+            ensemble = Ensemble(models)
+
+            pred_y = ensemble.predict_one(emb_text_sparse)
+
+            for j,y in enumerate(pred_y):
+                label = section_labels[i][j]
+                if label not in X_labels:
+                    X_labels[label] = y
+                else:
+                    X_labels[label] += y
+
+
+
+
+        return X_labels
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    """
     with open("data/" + section + "/models.pkl", 'rb') as f:
         learners = pickle.load(f)
 
@@ -53,7 +137,7 @@ def descriptors_assignment(doc_name, section, file_extension, device="cpu"):
 
 
     return reverse_y_ids, y
-
+    """
 
 
 
@@ -149,5 +233,5 @@ def get_judgment_nucleo_text(output):
     return text_list
 
 
-#descriptors_assignment("../IrisDataset/test_examples/teste.html", "6_seccao", ".html")
+descriptors_assignment("../IrisDataset/test_examples/teste.txt", "civel", ".txt")
 
