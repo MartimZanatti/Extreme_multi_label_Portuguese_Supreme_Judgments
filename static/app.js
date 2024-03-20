@@ -62,8 +62,8 @@ function showResponse(arrayOfParagraphs) {
 // Setup page events to handle a file.
 addEventListener("load", function () {
     document.getElementById("file").addEventListener("change", function (e) {
-        var seccao = document.getElementById("seccao").value;
-        postFile(e.target.files[0], seccao);
+        var area = document.getElementById("area").value;
+        postFile(e.target.files[0], area);
     });
     document.body.addEventListener("dragover", function (e) {
         e.preventDefault();
