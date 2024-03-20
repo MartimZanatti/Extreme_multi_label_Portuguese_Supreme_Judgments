@@ -302,5 +302,4 @@ def get_judgment_nucleo_text(output):
     return text_list
 
 
-descriptors_assignment("../IrisDataset/test_examples/teste.txt", "civel", ".txt")
 
