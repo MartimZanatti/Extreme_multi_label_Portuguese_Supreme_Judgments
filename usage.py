@@ -88,6 +88,16 @@ def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
 
         models.append(learners_7)
 
+        y_train_civel_file = open("data/civel/y_train_numpy.pkl", "rb")
+        y_train_civel = pickle.load(y_train_civel_file)
+        ys.append(y_train_civel)
+        section_labels.append(return_labels("civel"))
+
+        with open("data/civel/models.pkl", 'rb') as f:
+            learners_civel = pickle.load(f)
+
+        models.append(learners_civel)
+
     elif area == "criminal": #se a area for civel, vamos buscar os modelos da 3,5 seccao
         y_train_3_file = open("data/3_seccao/y_train_numpy.pkl", "rb")
         y_train_3 = pickle.load(y_train_3_file)
@@ -109,6 +119,16 @@ def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
             learners_5 = pickle.load(f)
 
         models.append(learners_5)
+
+        y_train_criminal_file = open("data/criminal/y_train_numpy.pkl", "rb")
+        y_train_criminal = pickle.load(y_train_criminal_file)
+        ys.append(y_train_criminal)
+        section_labels.append(return_labels("criminal"))
+
+        with open("data/criminal/models.pkl", 'rb') as f:
+            learners_criminal = pickle.load(f)
+
+        models.append(learners_criminal)
 
     elif area == "social": #se a area for civel, vamos buscar os modelos da 4 seccao
         y_train_4_file = open("data/4_seccao/y_train_numpy.pkl", "rb")
