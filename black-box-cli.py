@@ -17,21 +17,13 @@ def black_box(filename, file_extension, area):
 
     pred_labels = {k: v for k, v in sorted(labels.items(), key=lambda item: item[1], reverse=True)}
 
-
-
-
     json_descritores = []
 
     for key,value in pred_labels.items():
         json_descritores.append({"text": key, "score": value})
 
 
-
-
-
     print(json.dumps(json_descritores))
-
-
 
 
 

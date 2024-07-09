@@ -202,10 +202,6 @@ def train(args, svp, out, nn):
             # shape: #instances x embedding dim
             Z = als_model.item_factors
 
-
-
-
-
             print('linear regressor training')
             # learn the linear regressor
             if True:
@@ -306,9 +302,6 @@ def transform_torch_numpy(args):
         pickle.dump(y_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-
-
-
 def test(args):
     print("input:", args["ARGUMENTS"][1], args["ARGUMENTS"][2], args["ARGUMENTS"][3], args["ARGUMENTS"][4])
 
@@ -380,11 +373,6 @@ def test_models_joint(args):
 
 
             x_objects = transform_labels(pred_Y, sec, x_objects)
-
-
-            #performance = precision_at_ks(y_test, pred_Y)
-
-            #performance = precision_at_ks(y_test, pred_Y)
 
 
     performance = precision_all_models(y_test, x_objects, "3_seccao")

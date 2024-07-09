@@ -44,109 +44,109 @@ def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
 
 
     if area == "civel": #se a area for civel, vamos buscar os modelos da 1,2,6,7 seccao
-        y_train_1_file = open("data/1_seccao/y_train_numpy.pkl", "rb")
+        y_train_1_file = open("models/1_seccao/y_train_numpy.pkl", "rb")
         y_train_1 = pickle.load(y_train_1_file)
         ys.append(y_train_1)
         section_labels.append(return_labels("1_seccao"))
 
 
-        with open("data/1_seccao/models.pkl", 'rb') as f:
+        with open("models/1_seccao/models.pkl", 'rb') as f:
             learners_1 = pickle.load(f)
 
         models.append(learners_1)
 
-        y_train_2_file = open("data/2_seccao/y_train_numpy.pkl", "rb")
+        y_train_2_file = open("models/2_seccao/y_train_numpy.pkl", "rb")
         y_train_2 = pickle.load(y_train_2_file)
         ys.append(y_train_2)
         section_labels.append(return_labels("2_seccao"))
 
-        with open("data/2_seccao/models.pkl", 'rb') as f:
+        with open("models/2_seccao/models.pkl", 'rb') as f:
             learners_2 = pickle.load(f)
 
         models.append(learners_2)
 
-        y_train_6_file = open("data/6_seccao/y_train_numpy.pkl", "rb")
+        y_train_6_file = open("models/6_seccao/y_train_numpy.pkl", "rb")
         y_train_6 = pickle.load(y_train_6_file)
         ys.append(y_train_6)
         section_labels.append(return_labels("6_seccao"))
 
-        with open("data/6_seccao/models.pkl", 'rb') as f:
+        with open("models/6_seccao/models.pkl", 'rb') as f:
             learners_6 = pickle.load(f)
 
         models.append(learners_6)
 
-        y_train_7_file = open("data/7_seccao/y_train_numpy.pkl", "rb")
+        y_train_7_file = open("models/7_seccao/y_train_numpy.pkl", "rb")
         y_train_7 = pickle.load(y_train_7_file)
         ys.append(y_train_7)
         section_labels.append(return_labels("7_seccao"))
 
-        with open("data/7_seccao/models.pkl", 'rb') as f:
+        with open("models/7_seccao/models.pkl", 'rb') as f:
             learners_7 = pickle.load(f)
 
         models.append(learners_7)
 
-        y_train_civel_file = open("data/civel/y_train_numpy.pkl", "rb")
+        y_train_civel_file = open("models/civel/y_train_numpy.pkl", "rb")
         y_train_civel = pickle.load(y_train_civel_file)
         ys.append(y_train_civel)
         section_labels.append(return_labels("civel"))
 
-        with open("data/civel/models.pkl", 'rb') as f:
+        with open("models/civel/models.pkl", 'rb') as f:
             learners_civel = pickle.load(f)
 
         models.append(learners_civel)
 
     elif area == "criminal": #se a area for civel, vamos buscar os modelos da 3,5 seccao
-        y_train_3_file = open("data/3_seccao/y_train_numpy.pkl", "rb")
+        y_train_3_file = open("models/3_seccao/y_train_numpy.pkl", "rb")
         y_train_3 = pickle.load(y_train_3_file)
         ys.append(y_train_3)
         section_labels.append(return_labels("3_seccao"))
 
 
-        with open("data/3_seccao/models.pkl", 'rb') as f:
+        with open("models/3_seccao/models.pkl", 'rb') as f:
             learners_3 = pickle.load(f)
 
         models.append(learners_3)
 
-        y_train_5_file = open("data/5_seccao/y_train_numpy.pkl", "rb")
+        y_train_5_file = open("models/5_seccao/y_train_numpy.pkl", "rb")
         y_train_5 = pickle.load(y_train_5_file)
         ys.append(y_train_5)
         section_labels.append(return_labels("5_seccao"))
 
-        with open("data/5_seccao/models.pkl", 'rb') as f:
+        with open("models/5_seccao/models.pkl", 'rb') as f:
             learners_5 = pickle.load(f)
 
         models.append(learners_5)
 
-        y_train_criminal_file = open("data/criminal/y_train_numpy.pkl", "rb")
+        y_train_criminal_file = open("models/criminal/y_train_numpy.pkl", "rb")
         y_train_criminal = pickle.load(y_train_criminal_file)
         ys.append(y_train_criminal)
         section_labels.append(return_labels("criminal"))
 
-        with open("data/criminal/models.pkl", 'rb') as f:
+        with open("models/criminal/models.pkl", 'rb') as f:
             learners_criminal = pickle.load(f)
 
         models.append(learners_criminal)
 
     elif area == "social": #se a area for civel, vamos buscar os modelos da 4 seccao
-        y_train_4_file = open("data/4_seccao/y_train_numpy.pkl", "rb")
+        y_train_4_file = open("models/4_seccao/y_train_numpy.pkl", "rb")
         y_train_4 = pickle.load(y_train_4_file)
         ys.append(y_train_4)
         section_labels.append(return_labels("4_seccao"))
 
 
-        with open("data/4_seccao/models.pkl", 'rb') as f:
+        with open("models/4_seccao/models.pkl", 'rb') as f:
             learners_4 = pickle.load(f)
 
         models.append(learners_4)
 
     elif area == "contencioso": #se a area for civel, vamos buscar os modelos da 3,5 seccao
-        y_train_cont_file = open("data/contencioso/y_train_numpy.pkl", "rb")
+        y_train_cont_file = open("models/contencioso/y_train_numpy.pkl", "rb")
         y_train_cont = pickle.load(y_train_cont_file)
         ys.append(y_train_cont)
         section_labels.append(return_labels("contencioso"))
 
 
-        with open("data/contencioso/models.pkl", 'rb') as f:
+        with open("models/contencioso/models.pkl", 'rb') as f:
             learners_cont = pickle.load(f)
 
         models.append(learners_cont)
@@ -170,41 +170,6 @@ def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
 
 
         return X_labels
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    """
-    with open("data/" + section + "/models.pkl", 'rb') as f:
-        learners = pickle.load(f)
-
-
-    models = [Model(learner, y_train)
-              for learner in learners]
-    ensemble = Ensemble(models)
-
-
-    y = ensemble.predict_one(emb_text_sparse)
-
-    y_ids = np.argsort(y)
-
-    reverse_y_ids = np.flip(y_ids)
-
-
-    return reverse_y_ids, y
-    """
-
 
 
 
@@ -268,9 +233,6 @@ def get_sections(doc_name, type="docx", device="cpu"):
     return output
 
 
-
-
-
 def get_judgment_nucleo_text(output):
     text_list = []
     ids = []
@@ -300,3 +262,11 @@ def get_judgment_nucleo_text(output):
 
 
 
+
+def main():
+    descriptors_assignment("../IrisDataset/Acordaos/Ac. 13-21.9YFLSB.docx", "civel", ".docx")
+
+
+
+if __name__ == '__main__':
+    main()

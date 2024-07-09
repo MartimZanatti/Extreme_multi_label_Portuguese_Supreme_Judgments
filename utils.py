@@ -211,9 +211,6 @@ def get_emb_sec():
     x_test_2 = pickle.load(x_test_file_2)
 
 
-
-
-
     X_train = x_train + x_train_2
 
     X_test = x_test + x_test_2
@@ -225,7 +222,7 @@ def get_emb_sec():
         pickle.dump(X_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-#get_emb_sec()
+
 
 
 

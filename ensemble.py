@@ -29,13 +29,6 @@ class Model():
         # weight by 1 / distance
         weights = (1 / dist).T
         labels = np.asarray(self.train_Y[real_idx, :].todense())
-        # print(weights.shape)
-        # print(labels.shape)
-        # print(type(weights))
-        # print(type(labels))
-
-        #print(weights)
-        #print(labels)
 
         scores_per_instance = labels * weights
         scores = scores_per_instance.sum(axis=0)

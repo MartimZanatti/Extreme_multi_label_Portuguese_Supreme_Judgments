@@ -38,15 +38,11 @@ def get_docs_elastic_search():
             elastic_dic["text"].append(text)
 
 
-
-
     df = pd.DataFrame(elastic_dic)
     print(df)
 
     with open("data/elastic_data_descritores.pkl", 'wb') as f:
         pickle.dump(df, f)
-
-
 
 
 def pandas_to_excel():
@@ -255,9 +251,6 @@ def divide_elastic_data_in_areas():
 
 
 
-
-
-
 def get_descritores_list():
     file = open("data_area/Criminal/criminal.pkl", "rb")
     df = pickle.load(file)
@@ -306,8 +299,6 @@ def stat_descritores():
         row += 1
 
     workbook.close()
-
-
 
 
 def delete_few_descritores():
@@ -400,9 +391,6 @@ def divide_data_statified(section):
     df = pickle.load(file)
 
     y = df[df.columns[3:]].values
-
-
-
 
     x = df["text"].values.reshape(len(df), 1)
     print(x.shape)
@@ -504,190 +492,9 @@ def create_pandas_stratified_divisions(section_dir):
 
 #create_pandas_stratified_divisions("civel v2")
 
-def check_descritores_in_text(section_dir):
-    file = open("data/" + section_dir + "/first_section_without_few_descritores.pkl", "rb")
-    df = pickle.load(file)
-
-    print(df)
-    l_dic = []
-
-    for i, row in enumerate(df.iloc):
-        print("i", i)
-        text = row["text"]
-        d = {"id": row["id"]}
-        doc = Judgment(text, "html", False)
-        descritores  = row["descritores"]
-        for des_real in descritores:
-            d[des_real] = 0
-            des = des_real.lower()
-            des = re.sub(r'ç', 'c', des)
-            des = re.sub(r'ã', 'a', des)
-            des = re.sub(r'á', 'a', des)
-            des = re.sub(r'õ', 'o', des)
-            des = re.sub(r'ó', 'o', des)
-            des = re.sub(r'í', 'i', des)
-            des = re.sub(r'é', 'e', des)
-            des = re.sub(r'â', 'a', des)
-            des = re.sub(r'à', 'a', des)
-            des = re.sub(r'[^a-zA-Z0-9\s]+', '', des)
-            print(des)
-            for p in doc.paragraphs:
-                paragraph = p.text.get_text().lower()
-                paragraph = re.sub(r'ç', 'c', paragraph)
-                paragraph = re.sub(r'ã', 'a', paragraph)
-                paragraph = re.sub(r'á', 'a', paragraph)
-                paragraph = re.sub(r'õ', 'o', paragraph)
-                paragraph = re.sub(r'ó', 'o', paragraph)
-                paragraph = re.sub(r'í', 'i', paragraph)
-                paragraph = re.sub(r'é', 'e', paragraph)
-                paragraph = re.sub(r'â', 'a', paragraph)
-                paragraph = re.sub(r'à', 'a', paragraph)
-                paragraph = re.sub(r'[^a-zA-Z0-9\s]+', '', paragraph)
-                if len(des.split(' ')) == 1:
-                    paragraph_grams = paragraph.split(' ')
-                    for p_g in paragraph_grams:
-                        if des == p_g:
-                            d[des_real] += 1
-
-
-                else:
-                    n_grams = len(des.split(' '))
-                    paragraph_grams = []
-                    paragraph = ngrams(paragraph.split(), n_grams)
-                    for p in paragraph:
-                        s = ''
-                        for w in p:
-                            s += w + ' '
-                        paragraph_grams.append(s)
-
-
-
-                for p_g in paragraph_grams:
-                    if des == p_g:
-                        d[des_real] += 1
-
-
-
-        l_dic.append(d)
-
-
-
-    workbook = xlsxwriter.Workbook("data/" + section_dir + "/descritores_in_judgment.xlsx")
-    worksheet = workbook.add_worksheet()
-    row = 0
-    colum = 0
-
-    for l_d in l_dic:
-        print(l_d)
-        for key, value in l_d.items():
-            worksheet.write(row, colum, key)
-            row += 1
-            worksheet.write(row, colum, value)
-            row -= 1
-            colum += 1
-
-        row += 3
-        colum = 0
-
-    workbook.close()
-
-
-def check_descritores_in_judgment(section_dir):
-    file = open("data/" + section_dir + "/first_section_without_few_descritores.pkl", "rb")
-    df = pickle.load(file)
-
-    print(df)
-    dic_descritores = {}
-    found = False
-
-    for i, row in enumerate(df.iloc):
-        print("i", i)
-        text = row["text"]
-        doc = Judgment(text, "html", False)
-        descritores = row["descritores"]
-        for des_real in descritores:
-            des = des_real.lower()
-            des = re.sub(r'ç', 'c', des)
-            des = re.sub(r'ã', 'a', des)
-            des = re.sub(r'á', 'a', des)
-            des = re.sub(r'õ', 'o', des)
-            des = re.sub(r'ó', 'o', des)
-            des = re.sub(r'í', 'i', des)
-            des = re.sub(r'é', 'e', des)
-            des = re.sub(r'â', 'a', des)
-            des = re.sub(r'à', 'a', des)
-            des = re.sub(r'[^a-zA-Z0-9\s]+', '', des)
-            print(des)
-
-            if des_real + "_total" not in dic_descritores:
-                dic_descritores[des_real] = 0
-                dic_descritores[des_real + "_total"] = 1
-            else:
-                dic_descritores[des_real + "_total"] += 1
-
-            for p in doc.paragraphs:
-                paragraph = p.text.get_text().lower()
-                paragraph = re.sub(r'ç', 'c', paragraph)
-                paragraph = re.sub(r'ã', 'a', paragraph)
-                paragraph = re.sub(r'á', 'a', paragraph)
-                paragraph = re.sub(r'õ', 'o', paragraph)
-                paragraph = re.sub(r'ó', 'o', paragraph)
-                paragraph = re.sub(r'í', 'i', paragraph)
-                paragraph = re.sub(r'é', 'e', paragraph)
-                paragraph = re.sub(r'â', 'a', paragraph)
-                paragraph = re.sub(r'à', 'a', paragraph)
-                paragraph = re.sub(r'[^a-zA-Z0-9\s]+', '', paragraph)
-                if len(des.split(' ')) == 1:
-                    paragraph_grams = paragraph.split(' ')
-                    for p_g in paragraph_grams:
-                        if des == p_g:
-                            if des_real not in dic_descritores:
-                                dic_descritores[des_real] = 1
-                            else:
-                                dic_descritores[des_real] += 1
-                            found = True
-                            break
-                    if found:
-                        found = False
-                        break
-
-
-                else:
-                    n_grams = len(des.split(' '))
-                    paragraph_grams = []
-                    paragraph = ngrams(paragraph.split(), n_grams)
-                    for p in paragraph:
-                        s = ''
-                        for w in p:
-                            s += w + ' '
-                        paragraph_grams.append(s)
-
-                for p_g in paragraph_grams:
-                    if des == p_g:
-                        if des_real not in dic_descritores:
-                            dic_descritores[des_real] = 1
-                        else:
-                            dic_descritores[des_real] += 1
-                        break
 
 
 
 
-    workbook = xlsxwriter.Workbook("data/" + section_dir + "/descritores_in_judgment.xlsx")
-    worksheet = workbook.add_worksheet()
-    row = 0
-    colum = 0
-
-
-    for key, value in dic_descritores.items():
-        worksheet.write(row, colum, key)
-        row += 1
-        worksheet.write(row, colum, value)
-        row -= 1
-        colum += 1
-
-
-
-    workbook.close()
 
 
