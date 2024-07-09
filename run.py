@@ -121,6 +121,7 @@ from tqdm import tqdm
 from ensemble import Model, Ensemble
 from Judgment import Judgment, get_paragraph_by_id, add_zones_to_paragraph_objects
 import bilstm_crf
+import ast
 from bilstm_utils import id2word
 
 params = namedtuple('args', ['num_learner', 'num_clusters',
@@ -164,13 +165,11 @@ def train(args, svp, out, nn):
     clusterings = []
 
     for i in range(params.num_learners):
-        model = KMeans(n_clusters=params.num_clusters, n_init=8, max_iter=50)
+        model = KMeans(n_clusters=params.num_clusters, n_init=8, max_iter=50000)
         model.fit(x_train)
         clusterings.append(model)
 
     learners = []
-
-    print(clusterings)
 
 
 
@@ -212,7 +211,7 @@ def train(args, svp, out, nn):
             if True:
                 print('entrei')
                 # regressor = Ridge(fit_intercept=True, alpha=params.regressor_lambda2)
-                regressor = ElasticNet(alpha=0.1, l1_ratio=0.0001, max_iter=10)
+                regressor = ElasticNet(alpha=0.01, l1_ratio=0.0001, max_iter=100)
                 regressor.fit(X, Z)
                 # shape: embedding dim x feature dim
                 V = regressor.coef_
@@ -374,7 +373,9 @@ def test_models_joint(args):
                     x_objects.append(X_test(i, {}))
 
 
-            sec = args["ARGUMENTS"][a + 1][5:13]
+            sec = args["ARGUMENTS"][a + 1][18:26]
+
+            print(sec)
 
 
 
@@ -386,7 +387,7 @@ def test_models_joint(args):
             #performance = precision_at_ks(y_test, pred_Y)
 
 
-    performance = precision_all_models(y_test, x_objects, "1_seccao")
+    performance = precision_all_models(y_test, x_objects, "3_seccao")
 
 
 
@@ -462,7 +463,7 @@ def append_section_elastic_search(args):
             for p in sections_doc["relatório"]:
                 t = get_paragraph_by_id(p[1][0], doc)
                 t_to_add.append(t)
-
+        """
         if len(sections_doc["fundamentação de facto"]) != 0:
             keys.append("fundamentação de facto")
             for p in sections_doc["fundamentação de facto"]:
@@ -473,6 +474,7 @@ def append_section_elastic_search(args):
             for p in sections_doc["fundamentação de direito"]:
                 t = get_paragraph_by_id(p[1][0], doc)
                 t_to_add.append(t)
+        """
         if t_to_add == []:
             key, value = max(sections_doc.items(), key=lambda x: len(set(x[1])))
             keys.append(key)
@@ -488,11 +490,239 @@ def append_section_elastic_search(args):
     df.insert(len(df.columns), "section text", sections_text)
     df.insert(len(df.columns), "sections names", sections_name)
 
+    print(df)
+
     with open(args["ARGUMENTS"][1], 'wb') as f:
         pickle.dump(df, f)
 
 
+def sections_to_dict(args):
+    file = open(args["ARGUMENTS"][0], "rb")
+    df = pickle.load(file)  # train data as panda file
 
+    file = open(args["ARGUMENTS"][1], "rb")
+    df_test = pickle.load(file)  # train data as panda file
+
+
+    #print(args["ARGUMENTS"][0])
+    print("input", args["ARGUMENTS"][0], args["ARGUMENTS"][1])
+    print(df)
+    print(df_test)
+    print("output", args["ARGUMENTS"][2])
+
+    device = torch.device('cuda' if args['--cuda'] else 'cpu')
+    if args['--cuda']:
+        torch.cuda.set_device(int(args["--device-number"]))
+
+    judgment_dict = {}
+
+    for j,row in enumerate(df.iloc):
+        print("j", j)
+        text = row["text"]
+        doc = Judgment(text, "html_text", False)
+
+
+        model = bilstm_crf.BiLSTMCRF.load(args["--judgment-zone-model"], device)
+        model.eval()
+
+        all_text, ids, text_ids = doc.get_list_text()
+
+        # secções pela ordem mais importante
+        sections_doc = {"fundamentação de direito": [], "fundamentação de facto": [], "relatório": [], "decisão": [],
+                        "delimitação": [], "colectivo": [], "declaração": [], "cabeçalho": [], "foot-note": [],
+                        "título": []}
+        sections = model.get_sections(all_text, device)
+
+        sections = sections[0][1:-1]
+        sections_names = []
+        for tag in sections:
+            sections_names.append(id2word(tag))
+
+        for i, section in enumerate(sections_names):
+            if section in ["B-cabeçalho", "I-cabeçalho"]:
+                sections_doc["cabeçalho"].append((section, ids[i]))
+            elif section in ["B-relatório", "I-relatório"]:
+                sections_doc["relatório"].append((section, ids[i]))
+            elif section in ["B-delimitação", "I-delimitação"]:
+                sections_doc["delimitação"].append((section, ids[i]))
+            elif section in ["B-fundamentação-facto", "I-fundamentação-facto"]:
+                sections_doc["fundamentação de facto"].append((section, ids[i]))
+            elif section in ["B-fundamentação-direito", "I-fundamentação-direito"]:
+                sections_doc["fundamentação de direito"].append((section, ids[i]))
+            elif section in ["B-decisão", "I-decisão"]:
+                sections_doc["decisão"].append((section, ids[i]))
+            elif section in ["B-colectivo", "I-colectivo"]:
+                sections_doc["colectivo"].append((section, ids[i]))
+            elif section in ["B-declaração", "I-declaração"]:
+                sections_doc["declaração"].append((section, ids[i]))
+            elif section in ["B-foot-note", "I-foot-note"]:
+                sections_doc["foot-note"].append((section, ids[i]))
+            elif section == "título":
+                sections_doc["título"].append((section, ids[i]))
+
+
+        judgment_dict[row["id"]] = {}
+
+        for key,values in sections_doc.items():
+            if len(values) == []:
+                judgment_dict[row["id"]][key] = []
+            else:
+                text_to_dict = []
+                for p in values:
+                    t = get_paragraph_by_id(p[1][0], doc)
+                    text_to_dict.append(t)
+                judgment_dict[row["id"]][key] = text_to_dict
+
+    for k,row in enumerate(df_test.iloc):
+        print("k", k)
+        text = row["text"]
+        doc = Judgment(text, "html_text", False)
+
+
+        model = bilstm_crf.BiLSTMCRF.load(args["--judgment-zone-model"], device)
+        model.eval()
+
+        all_text, ids, text_ids = doc.get_list_text()
+
+        # secções pela ordem mais importante
+        sections_doc = {"fundamentação de direito": [], "fundamentação de facto": [], "relatório": [], "decisão": [],
+                        "delimitação": [], "colectivo": [], "declaração": [], "cabeçalho": [], "foot-note": [],
+                        "título": []}
+        sections = model.get_sections(all_text, device)
+
+        sections = sections[0][1:-1]
+        sections_names = []
+        for tag in sections:
+            sections_names.append(id2word(tag))
+
+        for i, section in enumerate(sections_names):
+            if section in ["B-cabeçalho", "I-cabeçalho"]:
+                sections_doc["cabeçalho"].append((section, ids[i]))
+            elif section in ["B-relatório", "I-relatório"]:
+                sections_doc["relatório"].append((section, ids[i]))
+            elif section in ["B-delimitação", "I-delimitação"]:
+                sections_doc["delimitação"].append((section, ids[i]))
+            elif section in ["B-fundamentação-facto", "I-fundamentação-facto"]:
+                sections_doc["fundamentação de facto"].append((section, ids[i]))
+            elif section in ["B-fundamentação-direito", "I-fundamentação-direito"]:
+                sections_doc["fundamentação de direito"].append((section, ids[i]))
+            elif section in ["B-decisão", "I-decisão"]:
+                sections_doc["decisão"].append((section, ids[i]))
+            elif section in ["B-colectivo", "I-colectivo"]:
+                sections_doc["colectivo"].append((section, ids[i]))
+            elif section in ["B-declaração", "I-declaração"]:
+                sections_doc["declaração"].append((section, ids[i]))
+            elif section in ["B-foot-note", "I-foot-note"]:
+                sections_doc["foot-note"].append((section, ids[i]))
+            elif section == "título":
+                sections_doc["título"].append((section, ids[i]))
+
+
+        judgment_dict[row["id"]] = {}
+
+        for key,values in sections_doc.items():
+            if len(values) == []:
+                judgment_dict[row["id"]][key] = []
+            else:
+                text_to_dict = []
+                for p in values:
+                    t = get_paragraph_by_id(p[1][0], doc)
+                    text_to_dict.append(t)
+                judgment_dict[row["id"]][key] = text_to_dict
+
+
+
+
+    with open(args["ARGUMENTS"][2], 'wb') as f:
+        pickle.dump(judgment_dict, f)
+
+
+
+def create_pd_with_sections(args):
+    file = open(args["ARGUMENTS"][0], "rb")
+    df = pickle.load(file)  # train data as panda file
+
+    print(df)
+
+    df_1 = df.iloc[:3000, :]
+    df_2 = df.iloc[3000:, :]
+
+
+    file = open(args["ARGUMENTS"][1], "rb")
+    judgment_dict = pickle.load(file)  # dict with sections
+
+    sections = ast.literal_eval(args["ARGUMENTS"][2]) # list with sections to retain
+
+
+    print("input:", args["ARGUMENTS"][0], args["ARGUMENTS"][1], args["ARGUMENTS"][2])
+    print("output:", args["ARGUMENTS"][3])
+
+    sections_text = []
+    sections_name = []
+
+    for j,row in enumerate(df_1.iloc):
+        print("j", j)
+        id = row["id"]
+
+        keys = []
+        t_to_add = []
+        for section in sections:
+            text_section = judgment_dict[id][section]
+            if text_section != []:
+                keys.append(section)
+                for t in text_section:
+                    t_to_add.append(t)
+
+        if t_to_add == []:
+            key, value = max(judgment_dict[id].items(), key=lambda x: len(set(x[1])))
+            keys.append(key)
+            for v in value:
+                t_to_add.append(v)
+
+
+        sections_text.append(t_to_add)
+        sections_name.append(keys)
+
+    df_1.insert(len(df.columns), "section text", sections_text)
+    df_1.insert(len(df.columns), "sections names", sections_name)
+
+    print(df_1)
+
+    with open(args["ARGUMENTS"][3], 'wb') as f:
+        pickle.dump(df_1, f)
+
+    sections_text_2 = []
+    sections_name_2 = []
+
+    for k, row in enumerate(df_2.iloc):
+        print("k", k)
+        id = row["id"]
+
+        keys = []
+        t_to_add = []
+        for section in sections:
+            text_section = judgment_dict[id][section]
+            if text_section != []:
+                keys.append(section)
+                for t in text_section:
+                    t_to_add.append(t)
+
+        if t_to_add == []:
+            key, value = max(judgment_dict[id].items(), key=lambda x: len(set(x[1])))
+            keys.append(key)
+            for v in value:
+                t_to_add.append(v)
+
+        sections_text_2.append(t_to_add)
+        sections_name_2.append(keys)
+
+    df_2.insert(len(df.columns), "section text", sections_text_2)
+    df_2.insert(len(df.columns), "sections names", sections_name_2)
+
+    print(df_2)
+
+    with open(args["ARGUMENTS"][4], 'wb') as f:
+        pickle.dump(df_2, f)
 
 
 def main():
@@ -502,9 +732,9 @@ def main():
     if args['--cuda']:
         torch.cuda.manual_seed(0)
     if args["sections-1-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-1-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-1-seccao"]:
         create_embeddings(args)
     elif args["embeddings-1-seccao-test"]:
@@ -512,7 +742,7 @@ def main():
     elif args["transform-1-seccao"]:
         transform_torch_numpy(args)
     elif args["train-1-seccao"]:
-        train(args, 30, 512, 15)
+        train(args, 20, 512, 25)
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
@@ -521,9 +751,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-2-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-2-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-2-seccao"]:
         create_embeddings(args)
     elif args["embeddings-2-seccao-test"]:
@@ -540,9 +770,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-3-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-3-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-3-seccao"]:
         create_embeddings(args)
     elif args["embeddings-3-seccao-test"]:
@@ -559,9 +789,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-4-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-4-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-4-seccao"]:
         create_embeddings(args)
     elif args["embeddings-4-seccao-test"]:
@@ -578,9 +808,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-5-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-5-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-5-seccao"]:
         create_embeddings(args)
     elif args["embeddings-5-seccao-test"]:
@@ -597,9 +827,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-6-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-6-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-6-seccao"]:
         create_embeddings(args)
     elif args["embeddings-6-seccao-test"]:
@@ -616,9 +846,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-7-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-7-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-7-seccao"]:
         create_embeddings(args)
     elif args["embeddings-7-seccao-test"]:
@@ -635,9 +865,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-contencioso-seccao"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-contencioso-seccao-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-contencioso-seccao"]:
         create_embeddings(args)
     elif args["embeddings-contencioso-seccao-test"]:
@@ -654,9 +884,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-civel"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-civel-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-civel"]:
         create_embeddings(args)
     elif args["embeddings-civel-test"]:
@@ -664,7 +894,7 @@ def main():
     elif args["transform-civel"]:
         transform_torch_numpy(args)
     elif args["train-civel"]:
-        train(args, 50, 1024, 10)
+        train(args, 30, 560, 15)
         performance = test(args)
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
@@ -673,9 +903,9 @@ def main():
         for k, s in performance.items():
             print('precision@{}: {:.4f}'.format(k, s))
     elif args["sections-criminal"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["sections-criminal-test"]:
-        append_section_elastic_search(args)
+        create_pd_with_sections(args)
     elif args["embeddings-criminal"]:
         create_embeddings(args)
     elif args["embeddings-criminal-test"]:

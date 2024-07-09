@@ -276,11 +276,11 @@ def get_descritores_list():
 
 
 def stat_descritores():
-    file = open("data_area/Criminal/criminal.pkl", "rb")
+    file = open("data/civel/civel_without_few_descritores.pkl", "rb")
     df = pickle.load(file)
     stat_dic = {}
 
-    workbook = xlsxwriter.Workbook("data_area/Criminal/criminal_stats.xlsx")
+    workbook = xlsxwriter.Workbook("data/criminal/civel_stats_few_descritores.xlsx")
     worksheet = workbook.add_worksheet()
     worksheet.write('A1', "Descritor")
     worksheet.write('B1', "Acordaos")
@@ -309,8 +309,9 @@ def stat_descritores():
 
 
 
+
 def delete_few_descritores():
-    file = open("data_area/Criminal/criminal.pkl", "rb")
+    file = open("data/criminal/criminal.pkl", "rb")
     df = pickle.load(file)
     print(df)
     dic = {"id": [], "area": [], "descritores": [], "text": []}
@@ -348,17 +349,18 @@ def delete_few_descritores():
 
     df = pd.DataFrame(dic)
     print(df)
-    with open("data_area/Criminal/criminal_without_few_descritores.pkl", 'wb') as f:
-        pickle.dump(df, f)
+    #with open("data_area/Criminal/criminal_without_few_descritores.pkl", 'wb') as f:
+    #    pickle.dump(df, f)
 
 
+#delete_few_descritores()
 
 def create_panda_all_labels(section):
-    file = open("data_area/" + section + "/criminal_without_few_descritores.pkl", "rb")
+    file = open("data/" + section + "/civil_without_few_descritores.pkl", "rb")
     df = pickle.load(file)
     dic = {"id": [], "area": [], "text": []}
 
-    labels = return_labels(section)
+    labels = return_labels("civel")
 
     print(labels)
     for d in labels:
@@ -380,15 +382,21 @@ def create_panda_all_labels(section):
 
     df = pd.DataFrame(dic)
     print(df)
-    with open("data_area/" + section + "/criminal_without_few_descritores_all_labels.pkl", 'wb') as f:
+
+    df = df.loc[:, (df != 0).any(axis=0)]
+
+    print(df)
+
+    with open("data/" + section + "/civil_without_few_descritores_all_labels.pkl", 'wb') as f:
         pickle.dump(df, f)
 
 
+#create_panda_all_labels("civel v2")
 
 
 
 def divide_data_statified(section):
-    file = open("data_area/" + section + "/criminal_without_few_descritores_all_labels.pkl", "rb")
+    file = open("data/" + section + "/civil_without_few_descritores_all_labels.pkl", "rb")
     df = pickle.load(file)
 
     y = df[df.columns[3:]].values
@@ -408,42 +416,42 @@ def divide_data_statified(section):
     print("y_train", y_train.shape)
     print("y_test", y_test.shape)
 
-    with open("data_area/" + section + "/X_train.pkl", 'wb') as f:
+    with open("data/" + section + "/X_train.pkl", 'wb') as f:
         pickle.dump(x_train, f)
 
-    with open("data_area/" + section + "/X_test.pkl", 'wb') as f:
+    with open("data/" + section + "/X_test.pkl", 'wb') as f:
         pickle.dump(x_test, f)
 
-    with open("data_area/" + section + "/y_train.pkl", 'wb') as f:
+    with open("data/" + section + "/y_train.pkl", 'wb') as f:
         pickle.dump(y_train, f)
 
-    with open("data_area/" + section + "/y_test.pkl", 'wb') as f:
+    with open("data/" + section + "/y_test.pkl", 'wb') as f:
         pickle.dump(y_test, f)
 
-
+#divide_data_statified("civel v2")
 
 
 def create_pandas_stratified_divisions(section_dir):
-    file = open("data_area/" + section_dir + "/criminal_without_few_descritores_all_labels.pkl", "rb")
+    file = open("data/" + section_dir + "/civil_without_few_descritores_all_labels.pkl", "rb")
     df = pickle.load(file)
     train = {"id": [], "area": [], "text": [], "descritores": []}
     test = {"id": [], "area": [], "text": [], "descritores": []}
 
     print(df)
 
-    x_train_file = open("data_area/" + section_dir + "/X_train.pkl", "rb")
+    x_train_file = open("data/" + section_dir + "/X_train.pkl", "rb")
     x_train = pickle.load(x_train_file)
 
 
-    y_train_file = open("data_area/" + section_dir + "/y_train.pkl", "rb")
+    y_train_file = open("data/" + section_dir + "/y_train.pkl", "rb")
     y_train = pickle.load(y_train_file)
 
 
-    x_test_file = open("data_area/" + section_dir + "/X_test.pkl", "rb")
+    x_test_file = open("data/" + section_dir + "/X_test.pkl", "rb")
     x_test = pickle.load(x_test_file)
 
 
-    y_test_file = open("data_area/" + section_dir + "/y_test.pkl", "rb")
+    y_test_file = open("data/" + section_dir + "/y_test.pkl", "rb")
     y_test = pickle.load(y_test_file)
 
     print("x_train", x_train.shape)
@@ -486,14 +494,15 @@ def create_pandas_stratified_divisions(section_dir):
 
     train_df = pd.DataFrame(train)
     print(train_df)
-    with open("data_area/" + section_dir + "/data_train.pkl", 'wb') as f:
+    with open("data/" + section_dir + "/data_train.pkl", 'wb') as f:
         pickle.dump(train_df, f)
 
     test_df = pd.DataFrame(test)
     print(test_df)
-    with open("data_area/" + section_dir + "/data_test.pkl", 'wb') as f:
+    with open("data/" + section_dir + "/data_test.pkl", 'wb') as f:
         pickle.dump(test_df, f)
 
+#create_pandas_stratified_divisions("civel v2")
 
 def check_descritores_in_text(section_dir):
     file = open("data/" + section_dir + "/first_section_without_few_descritores.pkl", "rb")

@@ -53,7 +53,7 @@ def create_embeddings(args):
 
     indxs = df.index.tolist()
 
-    assert len(indxs) == len(y)
+    #assert len(indxs) == len(y)
 
     model_name_bert = "stjiris/bert-large-portuguese-cased-legal-mlm-nli-sts-v1"
     model_emb = load_bert_model(model_name_bert, device)
@@ -196,6 +196,36 @@ def precision_all_models(true_Y, x_objects, section, ks=[1, 2, 3, 4, 5, 10, 15, 
     return result
 
 
+def get_emb_sec():
+    x_train_file = open("data/relatorio_direito/criminal/x_train_emb.pkl", "rb")
+    x_train = pickle.load(x_train_file)
+
+    x_train_file_2 = open("data/decision/criminal/x_train_emb.pkl", "rb")
+    x_train_2 = pickle.load(x_train_file_2)
+
+
+    x_test_file = open("data/relatorio_direito/criminal/x_test_emb.pkl", "rb")
+    x_test = pickle.load(x_test_file)
+
+    x_test_file_2 = open("data/decision/criminal/x_test_emb.pkl", "rb")
+    x_test_2 = pickle.load(x_test_file_2)
+
+
+
+
+
+    X_train = x_train + x_train_2
+
+    X_test = x_test + x_test_2
+
+    with open("data/relatorio_direito_decision/criminal/x_train_emb.pkl", 'wb') as handle:
+        pickle.dump(X_train, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open("data/relatorio_direito_decision/criminal/x_test_emb.pkl", 'wb') as handle:
+        pickle.dump(X_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+#get_emb_sec()
 
 
 

@@ -43,9 +43,6 @@ def descriptors_assignment(doc_name, area, file_extension, device="cpu"):
     section_labels = []
 
 
-
-
-
     if area == "civel": #se a area for civel, vamos buscar os modelos da 1,2,6,7 seccao
         y_train_1_file = open("data/1_seccao/y_train_numpy.pkl", "rb")
         y_train_1 = pickle.load(y_train_1_file)

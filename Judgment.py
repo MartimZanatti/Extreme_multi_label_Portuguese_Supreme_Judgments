@@ -25,6 +25,11 @@ class Judgment:
             for p in paragraphs_text:
                 self.paragraphs.append(ParagraphText(text=p, id=paragraph_id))
                 paragraph_id += 1
+        elif type == "html_text":
+            self.html = doc_name
+            self.paragraphs = []
+            self.add_paragraphs(italic)
+
 
     def init_docx_format(self, doc_name):
         html = pypandoc.convert_file(doc_name, "html", extra_args=["--wrap", "none"])
