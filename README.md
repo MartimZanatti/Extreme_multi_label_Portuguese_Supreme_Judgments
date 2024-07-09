@@ -12,7 +12,7 @@ To use this Extreme Multi-Label System for Portuguese Supreme Court Judgments, f
 
 1. Clone the repository to your local machine.
 2. In the usage.py file, use the usage function that receives a judgments and to which section it belongs. The judgment is divided into zones, where only the "relatório", "fundamentação" and "decisão" are considered to the Extreme-multi-label model. The y_train is loaded every time the model is used as well. This function returns the chosen labels for the respective document. The descriptors and documents used are from the Portuguese Supreme Court of Justice.
-3. It is possible to train new models with new data. The train function is in the run.py and the run.sh has the script. The dataset used is available in here [descriptor_stj] (https://huggingface.co/datasets/MartimZanatti/Descriptors_STJ).  
+3. It is possible to train new models with new data. The train function is in the run.py and the run.sh has the script. The dataset used is available in here (https://huggingface.co/datasets/MartimZanatti/Descriptors_STJ).  
 
 ### Contributing:
 We welcome contributions to enhance the functionality and performance of this system. If you have any ideas, bug fixes, or improvements, please submit a pull request, and we will review it promptly.
